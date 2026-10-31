@@ -55,6 +55,9 @@ h1{margin:0;font-family:var(--display);font-weight:500;font-size:clamp(34px,6vw,
 .body{margin:0;font-size:15.5px;line-height:1.6;color:var(--soft);max-width:36ch}
 .vis{display:block;aspect-ratio:16/10;max-width:100%;border-radius:16px;margin-bottom:14px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
 a.vis:active{transform:scale(.985)}
+.vis{position:relative;overflow:hidden;isolation:isolate}
+.vis iframe{position:absolute;top:0;left:0;width:250%;height:250%;border:0;transform:scale(.4);transform-origin:0 0;pointer-events:none;opacity:0;transition:opacity .6s ease}
+.vis iframe.ready{opacity:1}
 
 .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;min-height:52px;text-decoration:none;color:var(--fg)}
 .ch .nm{display:block;font-family:var(--display);font-weight:400;font-size:clamp(30px,8vw,36px);line-height:1.05;letter-spacing:-.02em}
@@ -102,7 +105,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
   <section class="view" id="v-work" data-label="Selected work">
     <article class="it"><button class="t" type="button" aria-expanded="false">Sprout Siege</button>
       <div class="panel"><div><div class="in"><p class="sub">Game · 2026</p>
-        <a class="vis" href="https://sprout-siege.netlify.app" target="_blank" rel="noopener" aria-label="Play Sprout Siege" style="background:var(--w1)"></a>
+        <a class="vis" href="https://sprout-siege.netlify.app" target="_blank" rel="noopener" aria-label="Play Sprout Siege" data-embed="https://sprout-siege.netlify.app" style="background:var(--w1)"></a>
         <p class="body">Pixel-art tower defense, playable in the browser.</p></div></div></div></article>
     <article class="it"><button class="t" type="button" aria-expanded="false">Oasis Town</button>
       <div class="panel"><div><div class="in"><p class="sub">Interactive · 2026</p>
@@ -110,7 +113,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
         <p class="body">A walkable pixel world built as a portfolio.</p></div></div></div></article>
     <article class="it"><button class="t" type="button" aria-expanded="false">Sun-Path Study</button>
       <div class="panel"><div><div class="in"><p class="sub">3D / Spatial · 2026</p>
-        <div class="vis" aria-hidden="true" style="background:var(--w3)"></div>
+        <a class="vis" href="https://backyard-sun.netlify.app/" target="_blank" rel="noopener" aria-label="Open Sun-Path Study" data-embed="https://backyard-sun.netlify.app/" style="background:var(--w3)"></a>
         <p class="body">Sun and shade across a backyard through the year.</p></div></div></div></article>
     <article class="it"><button class="t" type="button" aria-expanded="false">[Next project]</button>
       <div class="panel"><div><div class="in"><p class="sub">[Type] · [Year]</p>
@@ -134,13 +137,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
   <section class="view" id="v-contact" data-label="Get in touch" hidden>
     <a class="ch it" href="mailto:hello@wadi.studio"><span><span class="nm">Email</span><span class="hd">hello@wadi.studio</span></span>
       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L10 4M5 4h5v5"/></svg></a>
-    <a class="ch it" href="#contact"><span><span class="nm">WhatsApp</span><span class="hd">[NUMBER]</span></span>
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L10 4M5 4h5v5"/></svg></a>
     <a class="ch it" href="#contact"><span><span class="nm">Book a call</span><span class="hd">[BOOKING LINK]</span></span>
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L10 4M5 4h5v5"/></svg></a>
-    <a class="ch it" href="#contact"><span><span class="nm">LinkedIn</span><span class="hd">[PROFILE]</span></span>
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L10 4M5 4h5v5"/></svg></a>
-    <a class="ch it" href="#contact"><span><span class="nm">Instagram</span><span class="hd">[HANDLE]</span></span>
       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L10 4M5 4h5v5"/></svg></a>
     <p class="where">Jeddah, Saudi Arabia · local time <span id="clock">--:--</span></p>
   </section>
@@ -193,10 +190,20 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
       btn.addEventListener('click',function(){
         var it=btn.closest('.it'), was=it.classList.contains('on');
         clearSel(view);
-        if(!was){it.classList.add('on');btn.setAttribute('aria-expanded','true');view.classList.add('has-sel');}
+        if(!was){it.classList.add('on');btn.setAttribute('aria-expanded','true');view.classList.add('has-sel');loadEmbed(it);}
       });
     });
   });
+
+  function loadEmbed(it){
+    var v=it.querySelector('.vis[data-embed]');
+    if(!v||v.querySelector('iframe')) return;
+    var f=document.createElement('iframe');
+    f.src=v.dataset.embed; f.title=''; f.setAttribute('aria-hidden','true'); f.tabIndex=-1;
+    f.setAttribute('loading','lazy'); f.setAttribute('sandbox','allow-scripts allow-same-origin');
+    f.addEventListener('load',function(){f.classList.add('ready');});
+    v.appendChild(f);
+  }
 
   window.addEventListener('hashchange',function(){show(location.hash.slice(1));});
   show(location.hash.slice(1)||'work');
