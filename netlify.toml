@@ -1,0 +1,5 @@
+# Netlify reads this file automatically once the repo is linked.
+# Only the site/ folder is published; versions/ stays private to the repo.
+[build]
+  publish = "site"
+  command = ""
