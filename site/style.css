@@ -102,8 +102,6 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
   --display:'Fraunces','El Messiri','Iowan Old Style',Georgia,serif;
   --body:'Instrument Sans','IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',sans-serif}
 [lang="ar"] h1,[lang="ar"] .t,[lang="ar"] .ch .nm{letter-spacing:0}
-/* English names inside Arabic titles keep the English font (and never borrow the Arabic font's Latin letters) */
-[lang="ar"] .t [lang="en"]{font-family:'Fraunces','Iowan Old Style',Georgia,serif;letter-spacing:-.025em}
 [lang="ar"] h1{font-weight:500}
 [lang="ar"] .t{line-height:1.4;font-size:clamp(30px,8vw,38px)}
 [lang="ar"] .ch .nm{line-height:1.35}
