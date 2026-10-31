@@ -111,5 +111,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
 [lang="ar"] .lang{font-size:14px}
 /* arrows point the reading direction */
 [dir="rtl"] .go svg,[dir="rtl"] .next svg,[dir="rtl"] .ch svg.arrow{scale:-1 1}
+/* the email is left-to-right text, but on the Arabic page it lines up on the right with its title */
+[dir="rtl"] .ch .hd[dir="ltr"]{text-align:right}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
