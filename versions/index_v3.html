@@ -13,18 +13,18 @@
 :root{
   --bg:#EFEDE8; --fg:#16181A; --muted:#6A675F; --soft:#3F3D38;
   --bar:rgba(255,255,255,.94); --line:rgba(22,24,26,.08); --pill:#16181A; --pill-fg:#F4F1EA;
-  --w1:#55794C; --w2:#C99A62; --w3:#86A19C; --w4:#D8D4CB; --me:#CFCAC0;
+  --w1:#55794C; --w2:#C99A62; --w3:#86A19C; --w4:#D8D4CB; --w5:#D9BCAA; --me:#CFCAC0;
   --display:'Fraunces', 'Iowan Old Style', Georgia, serif;
   --body:'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#151614; --fg:#ECEAE4; --muted:#9C988E; --soft:#C9C5BB;
   --bar:rgba(34,35,32,.92); --line:rgba(236,234,228,.10); --pill:#ECEAE4; --pill-fg:#151614;
-  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --me:#4A4740; color-scheme:dark}}
+  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --w5:#7E6457; --me:#4A4740; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#151614; --fg:#ECEAE4; --muted:#9C988E; --soft:#C9C5BB;
   --bar:rgba(34,35,32,.92); --line:rgba(236,234,228,.10); --pill:#ECEAE4; --pill-fg:#151614;
-  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --me:#4A4740; color-scheme:dark}
+  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --w5:#7E6457; --me:#4A4740; color-scheme:dark}
 
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;-webkit-font-smoothing:antialiased;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
@@ -101,6 +101,10 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
   </section>
 
   <section class="view" id="v-work" data-label="Selected work">
+    <article class="it"><button class="t" type="button" aria-expanded="false">The Little Theory</button>
+      <div class="panel"><div><div class="in"><p class="sub">Online store</p>
+        <a class="vis" href="https://thelittletheory.com" target="_blank" rel="noopener" aria-label="Visit The Little Theory" style="background:var(--w5)"></a>
+        <p class="body">A curated concept store for children aged 0 to 12: clothing, toys, books and gift boxes from independent brands.</p></div></div></div></article>
     <article class="it"><button class="t" type="button" aria-expanded="false">Sprout Siege</button>
       <div class="panel"><div><div class="in"><p class="sub">Game · 2026</p>
         <a class="vis" href="https://sprout-siege.netlify.app" target="_blank" rel="noopener" aria-label="Play Sprout Siege" data-embed="https://sprout-siege.netlify.app" style="background:var(--w1)"></a>
