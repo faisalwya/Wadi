@@ -99,10 +99,12 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
 
 /* Arabic: right-to-left, Arabic fonts, no negative letter-spacing (it breaks joined letters), roomier lines */
 [lang="ar"]{
-  --display:'Fraunces','Noto Naskh Arabic','Iowan Old Style',Georgia,serif;
+  --display:'Fraunces','El Messiri','Iowan Old Style',Georgia,serif;
   --body:'Instrument Sans','IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',sans-serif}
 [lang="ar"] h1,[lang="ar"] .t,[lang="ar"] .ch .nm{letter-spacing:0}
-[lang="ar"] h1{font-weight:600}
+/* English names inside Arabic titles keep the English font (and never borrow the Arabic font's Latin letters) */
+[lang="ar"] .t [lang="en"]{font-family:'Fraunces','Iowan Old Style',Georgia,serif;letter-spacing:-.025em}
+[lang="ar"] h1{font-weight:500}
 [lang="ar"] .t{line-height:1.4;font-size:clamp(30px,8vw,38px)}
 [lang="ar"] .ch .nm{line-height:1.35}
 [lang="ar"] .body{font-size:16.5px;line-height:1.75}
