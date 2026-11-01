@@ -152,8 +152,6 @@
       if (!W) return;
       now = now || performance.now();
       c.clearRect(0, 0, W, H);
-      c.font = '400 9px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-      c.textAlign = 'center'; c.textBaseline = 'middle';
       for (var i = 0; i < this.cells.length; i++) {
         var cell = this.cells[i];
         if (!cell.on) continue;
@@ -168,13 +166,13 @@
         c.globalAlpha = a;
         c.fillStyle = col.cover; c.fillRect(x - .3, y - .3, CELL + .6, CELL + .6);
         c.fillStyle = col.ink; c.globalAlpha = a * 0.55;
-        c.fillText('-', x + CELL / 2, y + CELL / 2);
+        c.fillRect(x + CELL / 2 - 2, y + CELL / 2 - .5, 4, 1);     // a dash, drawn as a line so it is the same on every device
       }
       c.fillStyle = col.ink;
       for (var j = 0; j < this.flying.length; j++) {
         var f = this.flying[j];
         c.save(); c.globalAlpha = Math.max(0, f.life) * 0.8;
-        c.translate(f.x, f.y); c.rotate(f.rot); c.fillText('-', 0, 0); c.restore();
+        c.translate(f.x, f.y); c.rotate(f.rot); c.fillRect(-2, -.5, 4, 1); c.restore();
       }
       c.globalAlpha = 1;
     }
