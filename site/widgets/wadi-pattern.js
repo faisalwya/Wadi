@@ -1,12 +1,12 @@
 /* <wadi-pattern></wadi-pattern>
-   A slim ornament under the studio name, drawn only with everyday symbols.
+   A slim ornament under the studio name, drawn only with line-like symbols ( ) / \ | -.
    It is built around a centre point and mirrored, denser and darker in the middle,
    thinning and fading towards the ends, with facing brackets )( like links in a chain.
 
    Movement (never constant; all of it off with "reduce motion"):
    - on arrival it draws itself once, from the centre outwards
    - when you switch tabs, a ripple runs along it: symbols briefly turn into their
-     neighbours ( to <, . to :, : to ; ) and settle back
+     neighbours ( to <, / to |, - to = ) and settle back
    - tapping it sends a ripple out from where you touched
    - optional "breath": ?breath=1 in the URL (or a breath attribute) runs a soft ripple
      every ~10 s while it is on screen */
@@ -14,14 +14,15 @@
   if (customElements.get('wadi-pattern')) return;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // right half, read outwards from the centre ':'; the left half is its mirror image
-  var RIGHT = ') . )( :  .  -   .    .';
+  // right half, read outwards from the centre '|'; the left half is its mirror image.
+  // Only line-like symbols, tighter near the centre and opening up towards the ends.
+  var RIGHT = ') /)(\\ | /\\ - | / -  /';
   var MIRROR = { '(': ')', ')': '(', '<': '>', '>': '<', '/': '\\', '\\': '/' };
-  var NEXT = { '(': '<', ')': '>', '.': ':', ':': ';', '-': '=', '<': '(', '>': ')', ';': ':' };
+  var NEXT = { '(': '<', ')': '>', '/': '|', '\\': '|', '|': '/', '-': '=', '<': '(', '>': ')' };
 
   function buildLine() {
     var left = RIGHT.split('').reverse().map(function (ch) { return MIRROR[ch] || ch; }).join('');
-    return left + ':' + RIGHT;
+    return left + '|' + RIGHT;
   }
 
   class WadiPattern extends HTMLElement {
