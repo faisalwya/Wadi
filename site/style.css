@@ -91,6 +91,22 @@ wadi-pattern{display:block;width:max-content;margin:0 auto;padding:4px 0 2px;col
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
 wadi-pattern .grid{display:block}
 
+/* scratch-to-reveal card (site/widgets/wadi-scratch.js): the prize is page text under a canvas cover of dashes */
+wadi-scratch{display:block;position:relative;aspect-ratio:16/9;max-width:100%;border-radius:16px;overflow:hidden;margin-bottom:14px;
+  background:var(--pill);color:var(--pill-fg);touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none}
+wadi-scratch:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+wadi-scratch .prize{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:16px}
+wadi-scratch .big{font-family:var(--display);font-weight:500;font-size:clamp(36px,11vw,48px);line-height:1;letter-spacing:-.02em}
+[lang="ar"] wadi-scratch .big{letter-spacing:0;line-height:1.2}
+wadi-scratch .small{font-size:14px;opacity:.85}
+wadi-scratch .foot{position:absolute;bottom:14px;inset-inline-start:16px;font-size:11px;opacity:.55}
+wadi-scratch canvas{position:absolute;inset:0;width:100%;height:100%}
+wadi-scratch .hint{position:absolute;left:0;right:0;top:50%;translate:0 -50%;text-align:center;font-size:13px;color:var(--soft);pointer-events:none;transition:opacity .4s ease}
+wadi-scratch .hint.gone{opacity:0}
+wadi-scratch .again{position:absolute;bottom:2px;inset-inline-end:8px;min-height:44px;padding:0 8px;font:inherit;font-size:12px;color:var(--pill-fg);
+  background:none;border:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s ease}
+wadi-scratch.revealed .again{opacity:.8;pointer-events:auto}
+
 footer{margin:48px 6px 0;display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 
 nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));pointer-events:none}
