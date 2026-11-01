@@ -69,7 +69,7 @@
     var cName=cover.querySelector('.cover-name'), cLand=cover.querySelector('.cover-land'), enterBtn=cover.querySelector('.enter');
     var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky');
     var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
-    var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
+    var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site', assembling=null;
     var q=new URLSearchParams(location.search).get('cover');
     var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
     customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); });
@@ -99,11 +99,14 @@
     function clear(els){ els.forEach(function(el){ el.getAnimations().forEach(function(an){ an.cancel(); }); }); }
     function contentEls(){ return [].slice.call(wrap.children).filter(function(el){ return !el.classList.contains('top'); }); }
 
-    // the cover as it rests: shown at once (on load)
+    // the cover on load: the name builds itself from dashes lifting off the mountains (wadi-assemble.js)
     function showCover(){
       state='cover';
       root.classList.add('cover-on'); cover.hidden=false; wrap.inert=true; nav.inert=true;
       customElements.whenDefined('wadi-pattern').then(function(){ cLand.setHero(0); });
+      cName.style.opacity='0';                              // hidden until its dashes arrive
+      var go=function(){ if(window.wadiAssemble&&state==='cover') assembling=window.wadiAssemble(cName,cLand); else cName.style.opacity=''; };
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
     }
 
     // where the cover's name and landscape sit, compared with their places in the top bar
@@ -118,6 +121,8 @@
 
     function enter(){
       if(state!=='cover') return; state='moving';
+      if(assembling){ assembling.finish(); assembling=null; }   // entering early completes the name at once
+      cName.style.opacity='';
       clear([cName,cLand,bg,sky,enterBtn].concat(contentEls(),[nav]));
       var o=offsets(), t0=performance.now();
       // the birds and the swell settle as the move begins
