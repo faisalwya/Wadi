@@ -86,12 +86,16 @@ a.vis:active{transform:scale(.985)}
 .go:focus-visible,.next:focus-visible{outline:2px solid var(--fg);outline-offset:4px;border-radius:8px}
 
 /* Widgets: self-contained toys placed inside panels (site/widgets/) */
-/* slim ornament under the studio name: a mountain range built from individual symbols (site/widgets/wadi-pattern.js) */
-wadi-pattern{display:block;width:max-content;margin:0 auto;padding:4px 0 2px;color:var(--soft);touch-action:manipulation;-webkit-user-select:none;user-select:none;
+/* slim landscape of individual symbols under the studio name (site/widgets/wadi-pattern.js) */
+wadi-pattern{display:block;width:max-content;margin:0 auto;padding:2px 0 0;color:var(--soft);touch-action:manipulation;-webkit-user-select:none;user-select:none;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent)}
 wadi-pattern .range{position:relative}
-wadi-pattern span{position:absolute;left:-3px;top:-6px;width:6px;height:12px;text-align:center;
-  font:400 9px/12px ui-monospace,'SF Mono',Menlo,Consolas,monospace;transform-origin:3px 6px;will-change:transform,opacity}
+wadi-pattern .front,wadi-pattern .back{position:absolute;inset:0}
+wadi-pattern .back{opacity:.34}
+wadi-pattern span{position:absolute;left:-3px;top:-6px;width:6px;height:12px;text-align:center;line-height:12px;
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-weight:400;transform-origin:3px 6px;will-change:transform,opacity}
+wadi-pattern .front span{font-size:7.5px}
+wadi-pattern .back span{font-size:6px}
 wadi-rain{display:block;position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;margin-bottom:14px;background:var(--w4);
   cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 wadi-rain canvas{display:block;width:100%;height:100%}
