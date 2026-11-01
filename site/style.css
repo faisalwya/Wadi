@@ -88,14 +88,10 @@ a.vis:active{transform:scale(.985)}
 /* Widgets: self-contained toys placed inside panels (site/widgets/) */
 /* slim landscape of individual symbols under the studio name (site/widgets/wadi-pattern.js) */
 wadi-pattern{display:block;width:max-content;margin:0 auto;padding:2px 0 0;color:var(--soft);touch-action:manipulation;-webkit-user-select:none;user-select:none;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent)}
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
 wadi-pattern .range{position:relative}
-wadi-pattern .front,wadi-pattern .back{position:absolute;inset:0}
-wadi-pattern .back{opacity:.34}
 wadi-pattern span{position:absolute;left:-3px;top:-6px;width:6px;height:12px;text-align:center;line-height:12px;
-  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-weight:400;transform-origin:3px 6px;will-change:transform,opacity}
-wadi-pattern .front span{font-size:7.5px}
-wadi-pattern .back span{font-size:6px}
+  font:400 8px/12px ui-monospace,'SF Mono',Menlo,Consolas,monospace;transform-origin:3px 6px;will-change:transform,opacity}
 wadi-rain{display:block;position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;margin-bottom:14px;background:var(--w4);
   cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 wadi-rain canvas{display:block;width:100%;height:100%}
