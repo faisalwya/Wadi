@@ -14,6 +14,9 @@
    - Cover: setZoom(z) draws it sharp when the page shows it zoomed in; setHero(0) makes it "alive"
      (a slow swell rolls across the mountains and the ridgeline shimmers faintly); setHero(p) with p
      rising towards 1 calms it (gone by p = 1/3). That loop pauses when hidden.
+   - reflect (attribute, the cover): while alive, a faint mirrored copy of the mountains lies just below the
+     ground line, flattened like a reflection on water, fading with depth, with a slow ripple running through
+     it. It fades out with the calm, so it never travels into the top bar.
    Drawn on a canvas as tiny lines (not text), so it looks the same on every device and font. It only
    animates while something is moving; with "reduce motion" it changes shape instantly. */
 (function () {
@@ -21,6 +24,7 @@
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   var WIDTH = 220, HEIGHT = 24;                  // always this size (px)
+  var REFL = 14, SQUASH = .55;                   // the reflection's depth below the ground line (px) and flattening
   var K = 150, C = 15, LINK = 110;               // spring stiffness, damping, link to neighbours
 
   var LANDS = {
@@ -54,12 +58,14 @@
       this.cols = parseInt(this.getAttribute('cols'), 10) || 40;
       this.rows = parseInt(this.getAttribute('rows'), 10) || 6;
       this.cellW = WIDTH / this.cols; this.rowH = HEIGHT / this.rows;
+      this.reflect = this.hasAttribute('reflect');
       this.box = document.createElement('canvas'); this.box.className = 'grid';
+      if (this.reflect) this.box.style.bottom = (2 - REFL) + 'px';   // the landscape stays put; the water hangs below
       this.rtl = rtl;
       this.ctx = this.box.getContext('2d');
       this.view = { mode: null, p: 1 };
       this.append(this.box);
-      this.size(WIDTH, HEIGHT);
+      this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
       this.readInk();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); self.draw(); });
 
@@ -145,7 +151,7 @@
       var alive = this.aliveness(), t = this.aliveT || 0, bar = this.glyph === '|';
       var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : Math.max(.7, Math.min(1, rowH * .3));
       var fade = cols * .14;
-      this.size(WIDTH, HEIGHT);
+      this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
       c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
       for (var c = 0; c < cols; c++) {
         var h = this.h[c], u = c / cols;
@@ -161,6 +167,12 @@
           var shimmer = (alive && r === Math.floor(h - .001)) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + u * 92)) : 1;   // the ridgeline glints
           c2.globalAlpha = on * depth * edge * shimmer;
           c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+          // its reflection on the water: mirrored, flattened, fainter with depth, rippling
+          if (this.reflect && alive) {
+            var below = (r + .5) * rowH * SQUASH, ripple = Math.sin(t * 1.5 + r * 1.1 + u * 9) * .9;
+            c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r));
+            c2.fillRect(x - w / 2 + ripple, HEIGHT + 1.5 + below - hgt / 2, w, hgt * .9);
+          }
         }
       }
       c2.globalAlpha = 1;
