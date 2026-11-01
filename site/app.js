@@ -70,42 +70,56 @@
   window.addEventListener('hashchange',function(){show(location.hash.slice(1));window.scrollTo({top:contentTop(),behavior:calm.matches?'auto':'smooth'});});
   show(location.hash.slice(1)||'work');
 
-  // ---- Opening hero (first visit of a session): the name and the landscape start big on the first screen
-  // and shrink into the compact header as you scroll, following the scroll both ways.
-  // ?hero=on|off in the URL forces it (ignoring the once-per-session rule) for comparing.
+  // ---- Opening hero (first visit of a session): the name and the landscape start zoomed in on the first
+  // screen and shrink into the compact header as you scroll, following the scroll both ways.
+  // Where the browser supports scroll-driven CSS animations the shrink runs there, in step with the scroll
+  // itself (smoothest); otherwise this script moves them. Nothing is measured or redrawn during the scroll.
+  // ?hero=on|off in the URL forces it (ignoring the once-per-session rule) for testing.
   // Skipped with reduce motion and on links that open a specific tab; tapping a tab skips past it.
   var hero=document.getElementById('hero'), heroIn=hero&&hero.firstElementChild;
   var pat=document.querySelector('wadi-pattern'), h1=document.querySelector('h1');
   var heroQ=new URLSearchParams(location.search).get('hero');
   var seen=false; try{seen=sessionStorage.getItem('wadi-hero')==='1';}catch(e){}
   var heroOn=!!(hero&&pat&&window.customElements&&!calm.matches&&heroQ!=='off'&&(heroQ||(!seen&&!location.hash)));
-  var NAME_BIG=1.6, LAND_BIG_H=24*2.2, GAP=20;   // keep LAND_BIG_H in step with BIG_G in wadi-pattern.js
+  var heroCss=!!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline: scroll()'));
+  var ZOOM=1.6, GAP=20;                                   // how much bigger it starts; space between name and landscape
   var heroD=0, heroH0=0, heroTicking=false, nameY0=0, landY0=0, lastP=-1;
   function markSeen(){ try{sessionStorage.setItem('wadi-hero','1');}catch(e){} }
   function contentTop(){ return heroOn?heroD:0; }
   // measure once (and on resize), never during the scroll itself
   function heroLayout(){
-    h1.style.scale=''; h1.style.translate=''; pat.style.translate='';
+    var root=document.documentElement;
+    root.classList.remove('hero-css');
+    h1.style.scale=''; h1.style.translate=''; pat.style.scale=''; pat.style.translate='';
     heroH0=Math.max(520,Math.round(window.innerHeight*.84));
     hero.style.height=heroH0+'px';
-    heroD=Math.max(0,heroH0-heroIn.offsetHeight);
+    heroD=Math.max(1,heroH0-heroIn.offsetHeight);
     document.body.style.minHeight=(heroD+window.innerHeight)+'px';   // short tabs can still scroll far enough to collapse it
-    var nameH=h1.offsetHeight, nameTop=h1.offsetTop, landBottom=pat.offsetTop+pat.offsetHeight-2;
-    var groupH=nameH*NAME_BIG+GAP+LAND_BIG_H, top=heroH0*.44-groupH/2;           // the big group, centred a little high
-    nameY0=top-(nameTop+nameH/2-nameH*NAME_BIG/2);
-    landY0=top+nameH*NAME_BIG+GAP+LAND_BIG_H-landBottom;
-    pat.style.setProperty('--sky-bottom',(2+LAND_BIG_H+GAP+nameH*NAME_BIG+14).toFixed(0)+'px');   // birds fly just above the big name
+    var nameH=h1.offsetHeight, nameTop=h1.offsetTop, landH=24, landBottom=pat.offsetTop+pat.offsetHeight-2;
+    var groupH=(nameH+landH)*ZOOM+GAP, top=heroH0*.44-groupH/2;     // the big group, centred a little high
+    nameY0=top-(nameTop+nameH/2-nameH*ZOOM/2);                      // the name zooms about its centre
+    landY0=top+nameH*ZOOM+GAP+landH*ZOOM-landBottom;                // the landscape zooms up from its bottom edge
+    root.style.setProperty('--hero-s',ZOOM);
+    root.style.setProperty('--ny0',nameY0.toFixed(1)+'px');
+    root.style.setProperty('--ly0',landY0.toFixed(1)+'px');
+    pat.style.setProperty('--sky-bottom',((2+GAP+nameH*ZOOM+14)/ZOOM+landH).toFixed(1)+'px');   // birds just above the name
+    if(heroCss){
+      h1.style.animationRange=pat.style.animationRange='0px '+heroD+'px';
+      root.classList.add('hero-css');
+    }
+    if(pat.setZoom) pat.setZoom(ZOOM);
     lastP=-1; heroUpdate();
   }
   function heroUpdate(){
     heroTicking=false;
-    var p=heroD?Math.min(1,Math.max(0,window.scrollY/heroD)):1;
+    var p=Math.min(1,Math.max(0,window.scrollY/heroD));
     if(p===lastP) return; lastP=p;
-    var e=p*p*(3-2*p), k=1-e;
-    h1.style.scale=(NAME_BIG+(1-NAME_BIG)*e).toFixed(4);
-    h1.style.translate='0 '+(nameY0*k).toFixed(2)+'px';
-    pat.style.translate='0 '+(landY0*k).toFixed(2)+'px';
-    if(pat.setHero) pat.setHero(p);   // the landscape widget may still be loading
+    if(!heroCss){                                          // fallback: move them here
+      var e=p*p*(3-2*p), k=1-e, z=(ZOOM+(1-ZOOM)*e).toFixed(4);
+      h1.style.scale=z; h1.style.translate='0 '+(nameY0*k).toFixed(2)+'px';
+      pat.style.scale=z; pat.style.translate='0 '+(landY0*k).toFixed(2)+'px';
+    }
+    if(pat.setHero) pat.setHero(p);                        // fades the birds and the swell; the widget may still be loading
   }
   if(heroOn){
     document.documentElement.classList.add('hero-on');

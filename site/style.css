@@ -98,8 +98,16 @@ wadi-pattern .sky{display:block;position:absolute;left:50%;bottom:var(--sky-bott
    app.js sets the hero's height and the sizes; without it (reduce motion, return visits) nothing changes */
 .hero{position:relative}
 html.hero-on .hero-in{position:sticky;top:0}
-html.hero-on h1{animation:none!important}
-html.hero-on wadi-pattern{will-change:translate}
+html.hero-on h1{animation:none}
+html.hero-on wadi-pattern{transform-origin:50% 100%;will-change:scale,translate}
+html.hero-on h1{will-change:scale,translate}
+/* the shrink, driven by the scroll position itself (app.js sets the distance and the start values) */
+@supports (animation-timeline: scroll()){
+  html.hero-css h1{animation:hero-name cubic-bezier(.45,0,.55,1) both;animation-timeline:scroll(root)}
+  html.hero-css wadi-pattern{animation:hero-land cubic-bezier(.45,0,.55,1) both;animation-timeline:scroll(root)}
+}
+@keyframes hero-name{from{scale:var(--hero-s);translate:0 var(--ny0)}to{scale:1;translate:0 0}}
+@keyframes hero-land{from{scale:var(--hero-s);translate:0 var(--ly0)}to{scale:1;translate:0 0}}
 
 /* scratch-to-reveal card (site/widgets/wadi-scratch.js): the prize is page text under a canvas cover of dashes */
 wadi-scratch{display:block;position:relative;aspect-ratio:16/9;max-width:100%;border-radius:16px;overflow:hidden;margin-bottom:14px;

@@ -10,10 +10,9 @@
    - Columns are linked to their neighbours, so a tap sends a ripple across.
    - Optional breath: ?breath=1 (or a breath attribute) gives a small ripple every ~10 s.
    - Symbol: dash (stacked -, the default) or bar (stacked |); ?glyph=dash|bar in the URL overrides it for comparing.
-   - Opening hero: setHero(p) draws it bigger for the page's first screen and shrinks it back as p goes
-     from 0 to 1. The element's own box stays the compact size; while the hero is active the canvas is
-     its big size (made once, never resized mid-scroll) and only what is drawn on it changes, so the
-     shrink stays smooth. The faded ends are drawn too, so they follow the size.
+   - Opening hero: the page zooms the whole element (CSS scale) for its first screen and shrinks it as you
+     scroll; setZoom(z) draws the canvas at a resolution that stays sharp at that zoom, so nothing is redrawn
+     or resized while scrolling. setHero(p) only tells it how far the shrink has gone (0 big, 1 compact).
      While big it is "alive": a slow swell rolls across the mountains, the ridgeline shimmers faintly and a
      few small birds (two dash strokes each) flap and glide across in reading direction. All of it fades
      out as you scroll, leaving the usual compact landscape; it pauses when off screen or hidden.
@@ -100,12 +99,19 @@
     size(w, h) {
       w = Math.round(w); h = Math.round(h);
       if (this.cw === w && this.ch === h) return;
-      var dpr = Math.min(window.devicePixelRatio || 1, 3);
+      var dpr = Math.min(window.devicePixelRatio || 1, 3) * (this.zoom || 1);   // sharp even when zoomed in
       this.cw = w; this.ch = h;
       this.box.width = Math.round(w * dpr); this.box.height = Math.round(h * dpr);
       this.box.style.width = w + 'px'; this.box.style.height = h + 'px';
       this.box.style.transform = 'translateX(-50%)' + (this.rtl ? ' scaleX(-1)' : '');   // waves start where reading starts
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    // drawn sharp enough to be shown zoomed in by z (the opening hero)
+    setZoom(z) {
+      if (this.zoom === z) return;
+      this.zoom = z; this.cw = 0; this.draw();
+      if (this.sky) { this.sky.remove(); this.sky = null; this.drawSky(); }
     }
 
     // opening hero: p 0 = big first screen, 1 = compact
@@ -128,7 +134,7 @@
       var self = this;
       if (!this.birds) {
         this.birds = [0, 1, 2].map(function (i) {
-          return { x: [40, 190, 330][i], y0: [26, 40, 12][i], vx: [15, 11, 18][i], seed: i * 2.1 + .7, s: [5.6, 4.4, 5][i] };
+          return { x: [25, 120, 205][i], y0: [16, 25, 8][i], vx: [9, 7, 11][i], seed: i * 2.1 + .7, s: [3.5, 2.8, 3.1][i] };   // in unzoomed px
         });
       }
       var last = performance.now();
@@ -140,7 +146,7 @@
         }
         self.birds.forEach(function (b) {
           b.x += b.vx * dt;
-          if (b.x > self.skyW + 12) { b.x = -12; b.y0 = 10 + Math.random() * 34; }
+          if (b.x > self.skyW + 8) { b.x = -8; b.y0 = 6 + Math.random() * 22; }
         });
         if (!self.raf) self.draw();      // the physics loop draws too, when it is running
         self.drawSky();
@@ -155,8 +161,9 @@
       if (!this.sky) {
         if (a <= 0) return;
         this.sky = document.createElement('canvas'); this.sky.className = 'sky';
-        this.skyW = Math.min(window.innerWidth, 420); this.skyH = 60;
-        var dpr = Math.min(window.devicePixelRatio || 1, 3);
+        var z = this.zoom || 1;                                   // the element is zoomed by z, so draw at 1/z
+        this.skyW = Math.min(window.innerWidth, 420) / z; this.skyH = 60 / z;
+        var dpr = Math.min(window.devicePixelRatio || 1, 3) * z;
         this.sky.width = Math.round(this.skyW * dpr); this.sky.height = Math.round(this.skyH * dpr);
         this.sky.style.width = this.skyW + 'px'; this.sky.style.height = this.skyH + 'px';
         this.sky.style.transform = 'translateX(-50%)' + (this.rtl ? ' scaleX(-1)' : '');
@@ -167,7 +174,7 @@
       c.clearRect(0, 0, this.skyW, this.skyH);
       this.sky.style.opacity = a.toFixed(3);
       if (a <= 0 || !this.birds) return;
-      c.strokeStyle = this.ink; c.lineWidth = 1.1; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.strokeStyle = this.ink; c.lineWidth = 1.1 / (this.zoom || 1); c.lineCap = 'round'; c.lineJoin = 'round';
       this.birds.forEach(function (b) {
         var y = b.y0 + 2 * Math.sin(t * .8 + b.seed);
         var flapping = ((t + b.seed * 3) % 4.5) < 1.4;                       // a burst of flaps, then a glide
@@ -205,18 +212,9 @@
 
     // light the cells: full below the column's height, the top one partly, so heights glide
     draw() {
-      var v = this.view, c2 = this.ctx, BIG_F = 1.55, BIG_G = 2.2;
-      var ease = function (t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
-      var cw = COLS * CW, ch = ROWS * RH;
-      if (v.mode === 'shrink') {
-        var e = ease(v.p), f = BIG_F + (1 - BIG_F) * e, g = BIG_G + (1 - BIG_G) * e;
-        this.size(cw * BIG_F, ch * BIG_G);                       // the big size, kept for the whole shrink
-        c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(this.cw, this.ch, f, g, this.aliveness());
-      } else {
-        this.size(cw, ch); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(cw, ch, 1, 1);
-      }
+      var c2 = this.ctx, cw = COLS * CW, ch = ROWS * RH;
+      this.size(cw, ch); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
+      this.layer(cw, ch, 1, 1, this.aliveness());
       c2.globalAlpha = 1;
     }
 
