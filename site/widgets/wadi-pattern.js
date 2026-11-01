@@ -10,10 +10,10 @@
    - Columns are linked to their neighbours, so a tap sends a ripple across.
    - Optional breath: ?breath=1 (or a breath attribute) gives a small ripple every ~10 s.
    - Symbol: dash (stacked -, the default) or bar (stacked |); ?glyph=dash|bar in the URL overrides it for comparing.
-   - Opening hero: setHero(mode, p) draws it bigger for the page's first screen and shrinks it back as
-     p goes from 0 to 1 ('shrink'), or parts the mountains as if flying into the valley before the
-     compact landscape fades back in ('dive'). The element's own box stays the compact size; the
-     canvas grows upwards and sideways from its bottom edge, so layout never moves.
+   - Opening hero: setHero(p) draws it bigger for the page's first screen and shrinks it back as p goes
+     from 0 to 1. The element's own box stays the compact size; while the hero is active the canvas is
+     its big size (made once, never resized mid-scroll) and only what is drawn on it changes, so the
+     shrink stays smooth. The faded ends are drawn too, so they follow the size.
    It only animates while something is moving; with "reduce motion" it changes shape instantly. */
 (function () {
   if (customElements.get('wadi-pattern')) return;
@@ -106,27 +106,26 @@
     }
 
     // opening hero: p 0 = big first screen, 1 = compact
-    setHero(mode, p) {
-      this.view = { mode: p >= 1 ? null : mode, p: p };
+    setHero(p) {
+      this.view = { mode: p >= 1 ? null : 'shrink', p: p };
       this.draw();
     }
 
-    // one layer of the grid: cell scale f (width) and g (height), spread pushes columns outwards
-    layer(cw, ch, f, g, spread, alpha) {
-      if (alpha <= 0.005) return;
+    // the grid at cell scale f (width) and g (height), centred on the bottom edge of a cw x ch canvas
+    layer(cw, ch, f, g) {
       var c2 = this.ctx, bar = this.glyph === '|', cellW = CW * f, rowH = RH * g;
-      var w = (bar ? 1 : 3.6 * f) * (1 + spread * .5), hgt = bar ? 3 * g : Math.max(1, Math.min(1.6, f * .9));
-      var x0 = cw / 2 - COLS * cellW / 2;
+      var w = bar ? 1 : 3.6 * f, hgt = bar ? 3 * g : Math.max(1, Math.min(1.5, f * .9));
+      var x0 = cw / 2 - COLS * cellW / 2, fade = COLS * .14;
       for (var c = 0; c < COLS; c++) {
         var h = Math.max(0, this.h[c]);
         var x = x0 + (c + .5) * cellW;
-        x = cw / 2 + (x - cw / 2) * (1 + spread);
-        if (x < -w || x > cw + w) continue;
+        var edge = Math.min(1, (c + .5) / fade, (COLS - c - .5) / fade);   // ends fade out
+        edge = edge * edge * (3 - 2 * edge);
         for (var r = 0; r < ROWS; r++) {
           var on = Math.max(0, Math.min(1, h - r));
           if (on <= 0.01) continue;
           var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / 3));   // brightest at the top, fading down
-          c2.globalAlpha = on * depth * alpha;
+          c2.globalAlpha = on * depth * edge;
           c2.fillRect(x - w / 2, ch - (r + .5) * rowH - hgt / 2, w, hgt);
         }
       }
@@ -139,18 +138,12 @@
       var cw = COLS * CW, ch = ROWS * RH;
       if (v.mode === 'shrink') {
         var e = ease(v.p), f = BIG_F + (1 - BIG_F) * e, g = BIG_G + (1 - BIG_G) * e;
-        this.size(cw * f, ch * g); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(this.cw, this.ch, f, g, 0, 1);
-      } else if (v.mode === 'dive') {
-        // the big range parts and grows past the edges, then the compact one fades back in
-        var a = ease(v.p / .8), out = 1 - ease((v.p - .35) / .45), back = ease((v.p - .6) / .4);
-        this.size(Math.max(cw * BIG_F, window.innerWidth), ch * BIG_G * 1.5);
+        this.size(cw * BIG_F, ch * BIG_G);                       // the big size, kept for the whole shrink
         c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(this.cw, this.ch, BIG_F, BIG_G * (1 + .45 * a), 3.2 * a * a, out);
-        this.layer(this.cw, this.ch, 1, 1, 0, back);
+        this.layer(this.cw, this.ch, f, g);
       } else {
         this.size(cw, ch); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(cw, ch, 1, 1, 0, 1);
+        this.layer(cw, ch, 1, 1);
       }
       c2.globalAlpha = 1;
     }
