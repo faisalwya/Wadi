@@ -1,4 +1,4 @@
-/* <wadi-pattern glyph="bar|dash"></wadi-pattern>
+/* <wadi-pattern glyph="dash|bar"></wadi-pattern>
    A slim digital landscape under the studio name: a grid of identical symbols, like a small LED
    display. Each column is a stack that rises to the landscape's height, so the mountains appear as
    a silhouette made of uniform pieces; the top of each column is brightest and the stack fades
@@ -9,7 +9,7 @@
      column fades in and out so heights glide rather than jump.
    - Columns are linked to their neighbours, so a tap sends a ripple across.
    - Optional breath: ?breath=1 (or a breath attribute) gives a small ripple every ~10 s.
-   - Symbol: bar (stacked |, the default) or dash (stacked -); ?glyph=dash|bar in the URL overrides it for comparing.
+   - Symbol: dash (stacked -, the default) or bar (stacked |); ?glyph=dash|bar in the URL overrides it for comparing.
    It only animates while something is moving; with "reduce motion" it changes shape instantly. */
 (function () {
   if (customElements.get('wadi-pattern')) return;
@@ -51,7 +51,7 @@
       this.setAttribute('aria-hidden', 'true');
       var self = this, rtl = document.documentElement.dir === 'rtl';
       var q = new URLSearchParams(location.search).get('glyph');
-      var g = q || this.getAttribute('glyph') || 'bar';
+      var g = q || this.getAttribute('glyph') || 'dash';
       this.glyph = g === 'dash' ? '-' : '|';
       this.classList.add(this.glyph === '|' ? 'g-bar' : 'g-dash');
       this.box = document.createElement('div'); this.box.className = 'grid';

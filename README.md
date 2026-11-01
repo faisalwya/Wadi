@@ -6,7 +6,7 @@ Services site for Wadi Studio (placeholder name). Live at https://wadi-studio.ne
   - `site/index.html` is the English page (words only) and `site/ar/index.html` the Arabic page (words only, right-to-left).
   - `site/style.css` is the shared look and `site/app.js` the shared behaviour. Change them once and both languages update.
   - The pages have the same structure: a structural change (a new section, a new tab) is made in both.
-  - `site/widgets/` holds self-contained interactive pieces (for example `<wadi-rain>`), placed in a page with one tag. They start only when visible and follow light/dark mode.
+  - `site/widgets/` holds self-contained interactive pieces (for example `<wadi-pattern>`, the landscape under the studio name), placed in a page with one tag. They start only when visible and follow light/dark mode.
 - `versions/` keeps every earlier version. Up to v10 each is a single file (`index_v1.html` ... `index_v10.html`); from v11 each is a folder (`versions/v11/`) holding all the site's files. Save a copy there with each change so any version can be restored.
 - `netlify.toml` tells Netlify to publish the `site/` folder. Every push to `main` redeploys the site once the repo is linked to the Netlify project `wadi-studio`.
 - Branch deploys are on: any pushed branch gets a preview at `https://<branch>--wadi-studio.netlify.app` (requires a Netlify team login). Review there, then merge to `main` to go live.
