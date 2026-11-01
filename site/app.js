@@ -170,19 +170,6 @@
   window.addEventListener('hashchange',function(){show(location.hash.slice(1));window.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});});
   show(location.hash.slice(1)||'work');
 
-  // copy the email address, with a short confirmation
-  document.querySelectorAll('.copy').forEach(function(btn){
-    var label=btn.querySelector('span'), text=label.textContent, timer;
-    btn.addEventListener('click',function(){
-      var v=btn.dataset.copy, ok=function(){ btn.classList.add('done'); label.textContent=btn.dataset.done; clearTimeout(timer);
-        timer=setTimeout(function(){ btn.classList.remove('done'); label.textContent=text; },1800); };
-      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(ok,function(){ fallback(v); ok(); });
-      else { fallback(v); ok(); }
-    });
-  });
-  function fallback(v){ var t=document.createElement('textarea'); t.value=v; t.setAttribute('readonly',''); t.style.position='fixed'; t.style.opacity='0';
-    document.body.append(t); t.select(); try{document.execCommand('copy');}catch(e){} t.remove(); }
-
   function tick(){
     var d=new Date(Date.now()+3*3600*1000);
     var p=function(n){return (n<10?'0':'')+n;};

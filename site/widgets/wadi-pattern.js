@@ -5,7 +5,7 @@
    downwards, and the ends fade out. It is always 220 x 24 px; cols/rows set how fine the grid is
    (the cover uses a finer one).
    - A landscape for each tab (Work: peaks, Services: rolling dunes, About: one broad mountain,
-     Contact: a calm horizon with an open valley). On a tab switch the columns rise and fall to the
+     Contact: two peaks facing each other across the valley). On a tab switch the columns rise and fall to the
      new shape in a wave from where reading starts, with a little spring; the top symbol of each
      column fades in and out so heights glide rather than jump.
    - Columns are linked to their neighbours, so a tap sends a ripple across.
@@ -33,7 +33,8 @@
     services: { smooth: true, pts: [[0, .06], [.12, .34], [.25, .12], [.38, .6], [.5, .18], [.62, .66], [.75, .16], [.88, .38], [1, .06]] },
     about: { smooth: false, pts: [[0, .04], [.16, .12], [.3, .34], [.4, .6], [.46, .74], [.5, 1], [.555, .78], [.6, .66], [.7, .38],
       [.84, .14], [1, .04]] },
-    contact: { smooth: true, pts: [[0, .16], [.18, .32], [.34, .22], [.44, .08], [.5, .02], [.56, .08], [.66, .24], [.82, .34], [1, .16]] }
+    contact: { smooth: true, pts: [[0, .06], [.1, .14], [.18, .32], [.25, .58], [.31, .84], [.35, .78], [.39, .52], [.45, .2], [.5, .07],
+      [.55, .2], [.61, .52], [.65, .78], [.69, .84], [.75, .58], [.82, .32], [.9, .14], [1, .06]] }   // two peaks facing each other across the valley
   };
   function heightAt(land, u) {
     var p = land.pts;
