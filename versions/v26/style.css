@@ -1,0 +1,131 @@
+/* Shared look for every language page (site/index.html, site/ar/index.html). */
+/* Layout: one calm column; name, a focus list of big serif titles, a floating section bar at the bottom */
+:root{
+  --bg:#EFEDE8; --fg:#16181A; --muted:#6A675F; --soft:#3F3D38;
+  --bar:rgba(255,255,255,.94); --line:rgba(22,24,26,.08); --pill:#16181A; --pill-fg:#F4F1EA;
+  --w1:#55794C; --w2:#C99A62; --w3:#86A19C; --w4:#D8D4CB; --w5:#D9BCAA; --me:#CFCAC0;
+  --display:'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --body:'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151614; --fg:#ECEAE4; --muted:#9C988E; --soft:#C9C5BB;
+  --bar:rgba(34,35,32,.92); --line:rgba(236,234,228,.10); --pill:#ECEAE4; --pill-fg:#151614;
+  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --w5:#7E6457; --me:#4A4740; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151614; --fg:#ECEAE4; --muted:#9C988E; --soft:#C9C5BB;
+  --bar:rgba(34,35,32,.92); --line:rgba(236,234,228,.10); --pill:#ECEAE4; --pill-fg:#151614;
+  --w1:#4C6C44; --w2:#A9814F; --w3:#6F8984; --w4:#3A3934; --w5:#7E6457; --me:#4A4740; color-scheme:dark}
+
+body{-webkit-tap-highlight-color:transparent;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+a{color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-block:0 140px}
+/* Header: the centred name shrinks in place as you scroll, then scrolls away with the page.
+   Where supported, the browser drives the shrink from the scroll position itself (smoothest);
+   otherwise a small script sets --p from 0 to 1. Either way it follows your finger in both directions.
+   Only transform animates and the header keeps its height, so the page never jumps. */
+header{--p:0;position:relative;margin:0 -16px;padding:52px 22px 12px}
+/* language switch: top corner, on the reading side's far end */
+.lang{position:absolute;top:10px;inset-inline-end:16px;display:inline-flex;align-items:center;min-height:44px;padding:0 6px;
+  font-size:13px;color:var(--muted);text-decoration:none;border-radius:8px}
+.lang:hover{color:var(--fg)}.lang:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+h1{margin:0;width:fit-content;font-family:var(--display);font-weight:500;font-size:clamp(34px,6vw,44px);line-height:1;letter-spacing:-.03em;
+  margin-inline:auto;transform-origin:center;scale:calc(1 - .38 * var(--p))}
+@supports (animation-timeline: scroll()){
+  h1{animation:wadi-shrink ease-in-out both;animation-timeline:scroll(root);animation-range:0 56px}
+}
+@keyframes wadi-shrink{from{scale:1}to{scale:.62}}
+.label{margin:28px 6px 10px;font-size:13px;color:var(--muted)}
+
+.view{display:flex;flex-direction:column;gap:2px;padding:0 6px}
+.it{scroll-margin:24px 0 110px}
+.view[hidden]{display:none!important}
+.it{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.it:nth-child(2){animation-delay:.05s}.it:nth-child(3){animation-delay:.1s}.it:nth-child(4){animation-delay:.15s}.it:nth-child(5){animation-delay:.2s}
+@keyframes rise{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+
+.t{display:block;width:100%;padding:8px 0;min-height:52px;background:none;border:0;text-align:start;cursor:pointer;color:var(--fg);
+  font-family:var(--display);font-weight:400;font-size:clamp(32px,8.6vw,40px);line-height:1.08;letter-spacing:-.025em;text-wrap:balance;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  transition:opacity .4s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
+.t::after{content:'';flex:none;width:14px;height:14px;margin-inline-end:4px;
+  background:linear-gradient(var(--muted),var(--muted)) center/100% 1.5px no-repeat,linear-gradient(var(--muted),var(--muted)) center/1.5px 100% no-repeat;
+  transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.t[aria-expanded="true"]::after{transform:rotate(45deg)}
+@media (hover:hover){.view .t:hover{opacity:1}}
+.t:active{transform:scale(.985)}
+.t:focus-visible,.tab:focus-visible,.vis:focus-visible,.ch:focus-visible{outline:2px solid var(--fg);outline-offset:4px;border-radius:8px}
+.view.has-sel .it:not(.on) .t{opacity:.32}
+.panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.2,.7,.2,1)}
+.it.on .panel{grid-template-rows:1fr}
+.panel>div{overflow:hidden;min-height:0}
+.in{padding:2px 0 22px}
+.sub{margin:0 0 14px;font-size:13px;color:var(--muted)}
+.body{margin:0;font-size:15.5px;line-height:1.6;color:var(--soft);max-width:36ch}
+.vis{display:block;aspect-ratio:16/10;max-width:100%;border-radius:16px;margin-bottom:14px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
+a.vis:active{transform:scale(.985)}
+.vis{position:relative;overflow:hidden;isolation:isolate}
+.vis iframe{position:absolute;top:0;left:0;width:250%;height:250%;border:0;transform:scale(.4);transform-origin:0 0;pointer-events:none;opacity:0;transition:opacity .6s ease}
+.vis iframe.ready{opacity:1}
+.vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+
+.ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;min-height:52px;text-decoration:none;color:var(--fg)}
+.ch .nm{display:block;font-family:var(--display);font-weight:400;font-size:clamp(30px,8vw,36px);line-height:1.05;letter-spacing:-.02em}
+.ch .hd{display:block;margin-top:4px;font-size:13px;color:var(--muted);user-select:all}
+.ch svg{flex:none;margin-top:12px;stroke:var(--muted);transition:transform .25s ease}
+.ch:hover svg{transform:translate(2px,-2px)}
+.where{margin:20px 0 0;font-size:13px;color:var(--muted)}
+.go{display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:44px;font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
+.go svg,.next svg{stroke:currentColor;transition:transform .25s ease}
+.go:active svg,.go:hover svg{transform:translate(2px,-2px)}
+.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:36px 6px 0;padding:18px 0 0;min-height:52px;
+  color:var(--fg);text-decoration:none;font-size:15px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
+.next .q{color:var(--muted)}.next .a{display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.next:active{transform:scale(.985)}.next:hover svg{transform:translateX(3px)}
+.next[hidden]{display:none}
+.go:focus-visible,.next:focus-visible{outline:2px solid var(--fg);outline-offset:4px;border-radius:8px}
+
+/* Widgets: self-contained toys placed inside panels (site/widgets/) */
+/* slim digital landscape under the studio name: a grid of identical symbols (site/widgets/wadi-pattern.js) */
+wadi-pattern{display:block;width:max-content;margin:0 auto;padding:4px 0 2px;color:var(--soft);touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+wadi-pattern .grid{position:relative}
+wadi-pattern span{position:absolute;left:0;top:0;width:5.5px;height:4px;text-align:center;opacity:0;
+  font:400 7px/4px ui-monospace,'SF Mono',Menlo,Consolas,monospace;will-change:opacity}
+wadi-pattern.g-bar span{font-size:6px}
+wadi-rain{display:block;position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;margin-bottom:14px;background:var(--w4);
+  cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+wadi-rain canvas{display:block;width:100%;height:100%}
+wadi-rain .hint{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:13px;color:var(--soft);pointer-events:none;transition:opacity .6s ease}
+wadi-rain .hint.gone{opacity:0}
+
+footer{margin:48px 6px 0;display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));pointer-events:none}
+.bar{position:relative;max-width:420px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:3px;
+  background:var(--bar);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;
+  box-shadow:0 10px 30px -12px rgba(0,0,0,.28);pointer-events:auto}
+.ind{position:absolute;top:3px;bottom:3px;inset-inline-start:3px;width:calc((100% - 6px)/4);border-radius:999px;background:var(--pill);
+  transition:transform .45s cubic-bezier(.3,.8,.2,1)}
+.tab{position:relative;z-index:1;font:inherit;font-size:13.5px;font-weight:500;border:0;background:transparent;cursor:pointer;min-height:44px;
+  padding:0 4px;border-radius:999px;color:var(--soft);white-space:nowrap;transition:color .3s ease}
+.tab[aria-pressed="true"]{color:var(--pill-fg)}
+
+/* Arabic: right-to-left, Arabic fonts, no negative letter-spacing (it breaks joined letters), roomier lines */
+[lang="ar"]{
+  --display:'Fraunces','El Messiri','Iowan Old Style',Georgia,serif;
+  --body:'Instrument Sans','IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',sans-serif}
+[lang="ar"] h1,[lang="ar"] .t,[lang="ar"] .ch .nm{letter-spacing:0}
+[lang="ar"] h1{font-weight:500}
+[lang="ar"] .t{line-height:1.4;font-size:clamp(30px,8vw,38px)}
+[lang="ar"] .ch .nm{line-height:1.35}
+[lang="ar"] .body{font-size:16.5px;line-height:1.75}
+[lang="ar"] .sub,[lang="ar"] .label,[lang="ar"] .where{font-size:14px}
+[lang="ar"] .tab{font-size:14.5px}
+[lang="ar"] .lang{font-size:14px}
+/* arrows point the reading direction */
+[dir="rtl"] .go svg,[dir="rtl"] .next svg,[dir="rtl"] .ch svg.arrow{scale:-1 1}
+/* the email is left-to-right text, but on the Arabic page it lines up on the right with its title */
+[dir="rtl"] .ch .hd[dir="ltr"]{text-align:right}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
