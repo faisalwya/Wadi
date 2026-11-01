@@ -112,6 +112,9 @@ wadi-pattern.cover-land{margin-top:calc(20px + 24px * .6);transform:scale(1.6);t
 .enter:hover{color:var(--fg)}
 .enter:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 html.cover-on,html.cover-on body{overflow:hidden}
+/* the name in the top bar is a button back to the cover */
+.home{all:unset;cursor:pointer;border-radius:8px}
+.home:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
 html.cover-on .top h1,html.cover-on .top wadi-pattern{visibility:hidden}   /* the cover's copies stand in until they arrive */
 
 /* scratch-to-reveal card (site/widgets/wadi-scratch.js): the prize is page text under a canvas cover of dashes */

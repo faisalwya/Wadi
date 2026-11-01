@@ -54,58 +54,81 @@
     v.appendChild(f);
   }
 
-  // ---- Cover (first visit of a session): a full screen with the big name, the living landscape and the birds.
-  // Entering (the button, a swipe up, a scroll or a key) carries the name and landscape up into the top bar in
-  // one pre-built move while the cover fades and the content and menu slide in. Nothing here follows the scroll,
-  // so it plays the same on every phone. Skipped with reduce motion and on links that open a specific tab.
+  // ---- Cover: a full screen with the big name, the living landscape and the birds. It opens on the first
+  // visit of a session; entering (the pointer, a swipe up, a scroll or a key) carries the name and landscape
+  // up into the top bar in one pre-built move while the cover fades and the content and menu slide in.
+  // Tapping the name in the top bar plays the same move in reverse and returns to the cover.
+  // Nothing here follows the scroll, so it plays the same on every phone. The cover is skipped on links that
+  // open a specific tab and on return visits; with reduce motion there is no cover at all.
   // ?cover=on|off in the URL forces it (ignoring the once-per-session rule) for testing.
   var cover=document.getElementById('cover'), root=document.documentElement;
-  var coverQ=new URLSearchParams(location.search).get('cover');
-  var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
-  var coverOn=!!(cover&&!calm.matches&&coverQ!=='off'&&(coverQ||(!seen&&!location.hash)));
-  if(coverOn) openCover();
+  if(cover&&!calm.matches) setupCover(); else if(cover) cover.remove();
 
-  function openCover(){
+  function setupCover(){
     var wrap=document.querySelector('.wrap'), nav=document.querySelector('nav');
     var cName=cover.querySelector('.cover-name'), cLand=cover.querySelector('.cover-land'), enterBtn=cover.querySelector('.enter');
-    var ZOOM=1.6, entering=false;
-    root.classList.add('cover-on'); cover.hidden=false;
-    wrap.inert=true; nav.inert=true;
-    if(!coverQ){ try{sessionStorage.setItem('wadi-cover','1');}catch(e){} }   // once per session
-    // the cover's landscape: shown zoomed in and alive (its sky, wadi-sky, runs on its own)
-    customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); cLand.setHero(0); });
+    var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky');
+    var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
+    var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
+    var q=new URLSearchParams(location.search).get('cover');
+    var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
+    customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); });
 
+    // the name in the top bar becomes a button back to the cover (inside the heading, so it stays a heading)
+    var home=document.createElement('button');
+    home.type='button'; home.className='home'; home.textContent=hName.textContent;
+    home.setAttribute('aria-label',document.documentElement.lang==='ar'?'العودة إلى الغلاف':'Back to the cover');
+    hName.textContent=''; hName.append(home);
+    home.addEventListener('click',back);
+
+    // ways in
     enterBtn.addEventListener('click',enter);
     cover.addEventListener('wheel',function(e){ if(e.deltaY>8) enter(); },{passive:true});
     var y0=null;
     cover.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY; },{passive:true});
     cover.addEventListener('touchmove',function(e){ if(y0!==null&&y0-e.touches[0].clientY>28){ y0=null; enter(); } },{passive:true});
-    document.addEventListener('keydown',function onKey(e){
-      if(['ArrowDown','PageDown',' ','Enter'].indexOf(e.key)>-1){ document.removeEventListener('keydown',onKey); if(e.target!==enterBtn) e.preventDefault(); enter(); }
+    document.addEventListener('keydown',function(e){
+      if(state==='cover'&&['ArrowDown','PageDown',' ','Enter'].indexOf(e.key)>-1){ if(e.target!==enterBtn) e.preventDefault(); enter(); }
     });
 
-    function enter(){
-      if(entering) return; entering=true;
-      var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
-      // where each piece is now, and where it lands in the top bar
+    if(q!=='off'&&(q||(!seen&&!location.hash))){
+      if(!q){ try{sessionStorage.setItem('wadi-cover','1');}catch(e){} }   // once per session
+      showCover();
+    }
+
+    function clear(els){ els.forEach(function(el){ el.getAnimations().forEach(function(an){ an.cancel(); }); }); }
+    function contentEls(){ return [].slice.call(wrap.children).filter(function(el){ return !el.classList.contains('top'); }); }
+
+    // the cover as it rests: shown at once (on load)
+    function showCover(){
+      state='cover';
+      root.classList.add('cover-on'); cover.hidden=false; wrap.inert=true; nav.inert=true;
+      customElements.whenDefined('wadi-pattern').then(function(){ cLand.setHero(0); });
+    }
+
+    // where the cover's name and landscape sit, compared with their places in the top bar
+    function offsets(){
       var a=cName.getBoundingClientRect(), b=hName.getBoundingClientRect();
       var la=cLand.getBoundingClientRect(), lb=hLand.getBoundingClientRect();   // zoomed about its bottom centre, so that point is true
       var s=b.width/a.width;
-      var dx=(b.left+b.width/2)-(a.left+a.width*s/2), dy=(b.top+b.height/2)-(a.top+a.height*s/2);   // centre onto centre
-      var ldx=(lb.left+lb.width/2)-(la.left+la.width/2), ldy=lb.bottom-la.bottom;                     // bottom centre onto bottom centre
-      var ease='cubic-bezier(.65,0,.3,1)', D=640;
+      return { s:s,
+        name:'translate('+((b.left+b.width/2)-(a.left+a.width*s/2))+'px,'+((b.top+b.height/2)-(a.top+a.height*s/2))+'px) scale('+s+')',   // centre onto centre
+        land:'translate('+((lb.left+lb.width/2)-(la.left+la.width/2))+'px,'+(lb.bottom-la.bottom)+'px) scale(1)' };                     // bottom centre onto bottom centre
+    }
+
+    function enter(){
+      if(state!=='cover') return; state='moving';
+      clear([cName,cLand,bg,sky,enterBtn].concat(contentEls(),[nav]));
+      var o=offsets(), t0=performance.now();
       // the birds and the swell settle as the move begins
-      var t0=performance.now();
       (function calmDown(now){ var k=Math.min(1,(now-t0)/220); cLand.setHero(k*.34); if(k<1) requestAnimationFrame(calmDown); })(t0);
       enterBtn.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'});
-      var sky=cover.querySelector('wadi-sky');
-      if(sky) sky.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});   // sun, wind and birds fade first
-      cName.animate([{transform:'none'},{transform:'translate('+dx+'px,'+dy+'px) scale('+s+')'}],{duration:D,easing:ease,fill:'forwards'});
-      cLand.animate([{transform:'scale('+ZOOM+')'},{transform:'translate('+ldx+'px,'+ldy+'px) scale(1)'}],{duration:D,easing:ease,fill:'forwards'});
-      cover.querySelector('.cover-bg').animate([{opacity:1},{opacity:0}],{duration:D*.7,delay:D*.3,easing:'ease',fill:'forwards'});
+      sky.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});
+      cName.animate([{transform:'none'},{transform:o.name}],{duration:D,easing:EASE,fill:'forwards'});
+      cLand.animate([{transform:'scale('+ZOOM+')'},{transform:o.land}],{duration:D,easing:EASE,fill:'forwards'});
+      bg.animate([{opacity:1},{opacity:0}],{duration:D*.7,delay:D*.3,easing:'ease',fill:'forwards'});
       // the content and the menu slide in under it
-      [].slice.call(wrap.children).forEach(function(el,i){
-        if(el.classList.contains('top')) return;
+      contentEls().forEach(function(el,i){
         el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:520,delay:D*.45+i*30,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
       });
       nav.animate([{transform:'translateY(120%)'},{transform:'none'}],{duration:560,delay:D*.5,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
@@ -117,8 +140,29 @@
       },D-120);
       setTimeout(function(){
         cover.hidden=true; wrap.inert=false; nav.inert=false;
-        cover.remove();
+        state='site';
       },D+120);
+    }
+
+    // back to the cover: the same move in reverse
+    function back(){
+      if(state!=='site') return; state='moving';
+      window.scrollTo(0,0);
+      clear([cName,cLand,bg,sky,enterBtn].concat(contentEls(),[nav]));
+      cover.hidden=false; root.classList.add('cover-on'); wrap.inert=true; nav.inert=true;
+      var o=offsets();
+      contentEls().forEach(function(el){ el.animate([{opacity:1},{opacity:0,transform:'translateY(12px)'}],{duration:260,easing:'ease',fill:'forwards'}); });
+      nav.animate([{transform:'none'},{transform:'translateY(120%)'}],{duration:320,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'});
+      bg.animate([{opacity:0},{opacity:1}],{duration:D*.6,easing:'ease',fill:'backwards'});
+      cName.animate([{transform:o.name},{transform:'none'}],{duration:D,easing:EASE,fill:'backwards'});
+      cLand.animate([{transform:o.land},{transform:'scale('+ZOOM+')'}],{duration:D,easing:EASE,fill:'backwards'});
+      sky.animate([{opacity:0},{opacity:1}],{duration:420,delay:D*.7,easing:'ease',fill:'backwards'});
+      enterBtn.animate([{opacity:0},{opacity:1}],{duration:320,delay:D*.8,easing:'ease',fill:'backwards'});
+      setTimeout(function(){
+        state='cover';
+        cLand.setHero(0);                                   // the birds and the swell come back
+        clear(contentEls().concat([nav]));                  // the content waits, unseen, under the cover
+      },D+40);
     }
   }
 

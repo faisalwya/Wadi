@@ -60,7 +60,7 @@
       var self = this, last = performance.now();
       var tick = function (now) {
         var dt = Math.min(.05, (now - last) / 1000); last = now;
-        if (document.hidden || !self.isConnected) { self.raf = 0; return; }
+        if (document.hidden || !self.isConnected || !self.offsetWidth) { self.raf = 0; return; }   // hidden: rest until shown again
         self.step(now / 1000, dt);
         self.raf = requestAnimationFrame(tick);
       };
