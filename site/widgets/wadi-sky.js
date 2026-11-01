@@ -2,7 +2,9 @@
    The cover's sky, drawn in the same dash language as the landscape: five birds (two dash strokes
    each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
    in reading direction.
-   It fills its parent (the cover) and keeps the birds in the sky above the cover's name (.cover-name).
+   It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
+   close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
+   arriving, phone toolbars moving); birds already flying glide into the new band.
    The loop runs only while it is visible; colours follow light/dark. */
 (function () {
   if (customElements.get('wadi-sky')) return;
@@ -22,6 +24,9 @@
       this.readInk();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); });
       new ResizeObserver(function () { self.resize(); }).observe(this);
+      var name = this.parentNode && this.parentNode.querySelector('.cover-name');
+      if (name) new ResizeObserver(function () { self.resize(); }).observe(name);       // the name settles after its font loads
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { self.resize(); });
       document.addEventListener('visibilitychange', function () { if (!document.hidden) self.run(); });
     }
 
@@ -40,9 +45,17 @@
       var land = this.parentNode && this.parentNode.querySelector('.cover-land'), name = this.parentNode && this.parentNode.querySelector('.cover-name');
       var lr = land ? land.getBoundingClientRect() : null, nr = name ? name.getBoundingClientRect() : null;
       this.cx = lr ? lr.left + lr.width / 2 - r.left : this.W / 2;
-      this.skyTop = Math.max(24, (nr ? nr.top - r.top : this.H * .4) - this.H * .28);
-      this.skyBottom = nr ? nr.top - r.top - 18 : this.H * .45;
+      var oldTop = this.skyTop, oldBottom = this.skyBottom;
+      var nameTop = nr ? nr.top - r.top : this.H * .4;
+      this.skyBottom = nameTop - 20;                               // just above the name
+      this.skyTop = Math.max(24, nameTop - 120);
       if (!this.birds) this.setup();
+      else if (oldBottom !== undefined && (oldTop !== this.skyTop || oldBottom !== this.skyBottom)) {
+        var self = this, span = (oldBottom - oldTop) || 1;
+        this.birds.forEach(function (b) {                          // keep each bird's place within the band
+          b.target = self.skyTop + (b.y0 - oldTop) / span * (self.skyBottom - self.skyTop);
+        });
+      }
       this.run();
     }
 
@@ -77,7 +90,8 @@
       // birds: flap in bursts, glide in between, nearer ones larger and darker
       this.birds.forEach(function (b) {
         b.x += b.vx * dt;
-        if (b.x > W + 14) { b.x = -14; b.y0 = rand(self.skyTop, self.skyBottom); }
+        if (b.target !== undefined) { b.y0 += (b.target - b.y0) * Math.min(1, dt * 2.5); if (Math.abs(b.target - b.y0) < .3) { b.y0 = b.target; b.target = undefined; } }   // glide into a new band
+        if (b.x > W + 14) { b.x = -14; b.y0 = rand(self.skyTop, self.skyBottom); b.target = undefined; }
         var y = b.y0 + 3 * Math.sin(t * .7 + b.seed);
         var flapping = ((t + b.seed) % 4.2) < 1.3;
         var wing = flapping ? .5 + .7 * Math.sin(t * 10 + b.seed * 3) : .55;     // a clear v, flatter on the downstroke
