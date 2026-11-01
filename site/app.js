@@ -30,7 +30,7 @@
   tabs.forEach(function(t){t.addEventListener('click',function(){
     var k=t.dataset.tab;
     if(location.hash!=='#'+k){try{history.replaceState(null,'','#'+k);}catch(e){} }
-    show(k); window.scrollTo({top:0,behavior:'smooth'});
+    show(k); markSeen(); window.scrollTo({top:contentTop(),behavior:'smooth'});
   });});
 
   document.querySelectorAll('.view').forEach(function(view){
@@ -67,8 +67,51 @@
     onScroll();
   }
 
-  window.addEventListener('hashchange',function(){show(location.hash.slice(1));window.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});});
+  window.addEventListener('hashchange',function(){show(location.hash.slice(1));window.scrollTo({top:contentTop(),behavior:calm.matches?'auto':'smooth'});});
   show(location.hash.slice(1)||'work');
+
+  // ---- Opening hero (first visit of a session): the name and the landscape start big on the first screen
+  // and shrink into place as you scroll ('shrink'), or the view flies into the valley ('dive').
+  // ?hero=shrink|dive|off in the URL picks one (and ignores the once-per-session rule) for comparing.
+  // Skipped with reduce motion and on links that open a specific tab; tapping a tab skips past it.
+  var hero=document.getElementById('hero'), heroIn=hero&&hero.firstElementChild;
+  var pat=document.querySelector('wadi-pattern'), h1=document.querySelector('h1'), cue=document.querySelector('.cue');
+  var heroQ=new URLSearchParams(location.search).get('hero'), heroMode=heroQ==='dive'?'dive':'shrink';
+  var seen=false; try{seen=sessionStorage.getItem('wadi-hero')==='1';}catch(e){}
+  var heroOn=!!(hero&&pat&&window.customElements&&!calm.matches&&heroQ!=='off'&&(heroQ||(!seen&&!location.hash)));
+  var heroD=0, heroH0=0, heroTicking=false, NAME_BIG=1.6, LAND_BIG_H=24*2.2, GAP=20;   // keep LAND_BIG_H in step with BIG_G in wadi-pattern.js
+  function markSeen(){ try{sessionStorage.setItem('wadi-hero','1');}catch(e){} }
+  function contentTop(){ return heroOn?heroD:0; }
+  function heroLayout(){
+    heroH0=Math.max(520,Math.round(window.innerHeight*.84));
+    hero.style.height=heroH0+'px';
+    heroD=Math.max(0,heroH0-heroIn.offsetHeight);
+    document.body.style.minHeight=(heroD+window.innerHeight)+'px';   // short tabs can still scroll far enough to collapse it
+    heroUpdate();
+  }
+  function heroUpdate(){
+    heroTicking=false;
+    var p=heroD?Math.min(1,Math.max(0,window.scrollY/heroD)):1, e=p*p*(3-2*p), k=1-e;
+    var nameH=h1.offsetHeight, nameTop=h1.offsetTop, landBottom=pat.offsetTop+pat.offsetHeight-2;
+    var groupH=nameH*NAME_BIG+GAP+LAND_BIG_H, top=heroH0*.44-groupH/2;           // the big group, centred a little high
+    var nameY=(top-(nameTop+nameH/2-nameH*NAME_BIG/2))*k;
+    var landY=(top+nameH*NAME_BIG+GAP+LAND_BIG_H-landBottom)*k;
+    h1.style.scale=(NAME_BIG+(1-NAME_BIG)*e).toFixed(4);
+    h1.style.translate='0 '+nameY.toFixed(1)+'px';
+    pat.style.translate='0 '+landY.toFixed(1)+'px';
+    if(pat.setHero) pat.setHero(heroMode,p);   // the landscape widget may still be loading
+    cue.style.transform='translateY('+(landBottom+landY+4).toFixed(1)+'px)';
+    cue.style.opacity=Math.max(0,1-p*5).toFixed(2);
+  }
+  if(heroOn){
+    document.documentElement.classList.add('hero-on');
+    if(!heroQ) markSeen();   // shown once per session; later page loads start compact
+    heroLayout();
+    window.addEventListener('scroll',function(){if(!heroTicking){heroTicking=true;requestAnimationFrame(heroUpdate);}},{passive:true});
+    window.addEventListener('resize',heroLayout);
+    customElements.whenDefined('wadi-pattern').then(heroLayout);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(heroLayout);   // the name's size depends on its font
+  }
 
   function tick(){
     var d=new Date(Date.now()+3*3600*1000);

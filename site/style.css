@@ -87,9 +87,22 @@ a.vis:active{transform:scale(.985)}
 
 
 /* slim digital landscape under the studio name, drawn on a canvas (site/widgets/wadi-pattern.js); ends fade out */
-wadi-pattern{display:block;width:max-content;margin:0 auto;padding:4px 0 2px;color:var(--soft);touch-action:manipulation;-webkit-user-select:none;user-select:none;
+wadi-pattern{display:block;position:relative;width:220px;height:24px;max-width:100%;margin:0 auto;padding:4px 0 2px;color:var(--soft);
+  touch-action:manipulation;-webkit-user-select:none;user-select:none}
+/* the canvas sits on the bottom edge and may grow past the box (opening hero); its ends fade out */
+wadi-pattern .grid{display:block;position:absolute;left:50%;bottom:2px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
-wadi-pattern .grid{display:block}
+
+/* opening hero (first visit): the name and landscape start big and shrink or dive into place as you scroll.
+   app.js sets the hero's height and the sizes; without it (reduce motion, return visits) nothing changes */
+.hero{position:relative}
+html.hero-on .hero-in{position:sticky;top:0}
+html.hero-on h1{animation:none!important}
+.cue{display:none}
+html.hero-on .cue{display:block;position:absolute;left:50%;top:0;width:4px;height:56px;margin-left:-2px;pointer-events:none}
+.cue i{position:absolute;left:0;top:0;width:4px;height:1px;background:var(--soft);opacity:0;animation:trickle 1.8s cubic-bezier(.5,0,.8,.6) infinite}
+.cue i:nth-child(2){animation-delay:.6s}.cue i:nth-child(3){animation-delay:1.2s}
+@keyframes trickle{0%{translate:0 0;opacity:0}15%{opacity:.75}100%{translate:0 52px;opacity:0}}
 
 /* scratch-to-reveal card (site/widgets/wadi-scratch.js): the prize is page text under a canvas cover of dashes */
 wadi-scratch{display:block;position:relative;aspect-ratio:16/9;max-width:100%;border-radius:16px;overflow:hidden;margin-bottom:14px;
