@@ -72,12 +72,8 @@
     root.classList.add('cover-on'); cover.hidden=false;
     wrap.inert=true; nav.inert=true;
     if(!coverQ){ try{sessionStorage.setItem('wadi-cover','1');}catch(e){} }   // once per session
-    // the cover's landscape: shown zoomed in, alive, with the birds just above the name
-    customElements.whenDefined('wadi-pattern').then(function(){
-      cLand.setZoom(ZOOM); cLand.setHero(0);
-      cLand.style.setProperty('--sky-bottom',((2+20+cName.offsetHeight+14)/ZOOM+24).toFixed(1)+'px');
-    });
-    setTimeout(function(){ try{enterBtn.focus({preventScroll:true});}catch(e){} },50);
+    // the cover's landscape: shown zoomed in and alive (its sky, wadi-sky, runs on its own)
+    customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); cLand.setHero(0); });
 
     enterBtn.addEventListener('click',enter);
     cover.addEventListener('wheel',function(e){ if(e.deltaY>8) enter(); },{passive:true});
@@ -102,6 +98,8 @@
       var t0=performance.now();
       (function calmDown(now){ var k=Math.min(1,(now-t0)/220); cLand.setHero(k*.34); if(k<1) requestAnimationFrame(calmDown); })(t0);
       enterBtn.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'});
+      var sky=cover.querySelector('wadi-sky');
+      if(sky) sky.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});   // sun, wind and birds fade first
       cName.animate([{transform:'none'},{transform:'translate('+dx+'px,'+dy+'px) scale('+s+')'}],{duration:D,easing:ease,fill:'forwards'});
       cLand.animate([{transform:'scale('+ZOOM+')'},{transform:'translate('+ldx+'px,'+ldy+'px) scale(1)'}],{duration:D,easing:ease,fill:'forwards'});
       cover.querySelector('.cover-bg').animate([{opacity:1},{opacity:0}],{duration:D*.7,delay:D*.3,easing:'ease',fill:'forwards'});
@@ -114,13 +112,13 @@
       // hand over: the real name and landscape fade in as the travelling copies fade out (hides any sub-pixel difference)
       setTimeout(function(){
         root.classList.remove('cover-on');
-        [hName,hLand].forEach(function(el){ el.animate([{opacity:0},{opacity:1}],{duration:140,easing:'ease'}); });
-        [cName,cLand].forEach(function(el){ el.animate([{opacity:1},{opacity:0}],{duration:140,easing:'ease',fill:'forwards'}); });
-      },D-60);
+        [hName,hLand].forEach(function(el){ el.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease'}); });
+        [cName,cLand].forEach(function(el){ el.animate([{opacity:1},{opacity:0}],{duration:220,easing:'ease',fill:'forwards'}); });
+      },D-120);
       setTimeout(function(){
         cover.hidden=true; wrap.inert=false; nav.inert=false;
         cover.remove();
-      },D+100);
+      },D+120);
     }
   }
 

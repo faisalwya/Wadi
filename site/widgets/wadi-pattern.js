@@ -1,25 +1,26 @@
-/* <wadi-pattern glyph="dash|bar"></wadi-pattern>
+/* <wadi-pattern glyph="dash|bar" cols="40" rows="6"></wadi-pattern>
    A slim digital landscape under the studio name: a grid of identical symbols, like a small LED
    display. Each column is a stack that rises to the landscape's height, so the mountains appear as
    a silhouette made of uniform pieces; the top of each column is brightest and the stack fades
-   downwards.
+   downwards, and the ends fade out. It is always 220 x 24 px; cols/rows set how fine the grid is
+   (the cover uses a finer one).
    - A landscape for each tab (Work: peaks, Services: rolling dunes, About: one broad mountain,
      Contact: a calm horizon with an open valley). On a tab switch the columns rise and fall to the
      new shape in a wave from where reading starts, with a little spring; the top symbol of each
      column fades in and out so heights glide rather than jump.
    - Columns are linked to their neighbours, so a tap sends a ripple across.
    - Optional breath: ?breath=1 (or a breath attribute) gives a small ripple every ~10 s.
-   - Symbol: dash (stacked -, the default) or bar (stacked |); ?glyph=dash|bar in the URL overrides it for comparing.
-   - Cover: the page shows a second copy zoomed in (CSS) on its opening screen; setZoom(z) draws it sharp at
-     that zoom. setHero(0) makes it "alive": a slow swell rolls across the mountains, the ridgeline shimmers
-     faintly and a few small birds (two dash strokes each) flap and glide across in reading direction.
-     setHero(p) with p rising towards 1 calms it (gone by p = 1/3). The loop pauses when hidden.
-   It only animates while something is moving; with "reduce motion" it changes shape instantly. */
+   - Symbol: dash (stacked -, the default) or bar (stacked |); ?glyph=dash|bar in the URL overrides it.
+   - Cover: setZoom(z) draws it sharp when the page shows it zoomed in; setHero(0) makes it "alive"
+     (a slow swell rolls across the mountains and the ridgeline shimmers faintly); setHero(p) with p
+     rising towards 1 calms it (gone by p = 1/3). That loop pauses when hidden.
+   Drawn on a canvas as tiny lines (not text), so it looks the same on every device and font. It only
+   animates while something is moving; with "reduce motion" it changes shape instantly. */
 (function () {
   if (customElements.get('wadi-pattern')) return;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var COLS = 40, ROWS = 6, CW = 5.5, RH = 4;    // grid and cell size (px)
+  var WIDTH = 220, HEIGHT = 24;                  // always this size (px)
   var K = 150, C = 15, LINK = 110;               // spring stiffness, damping, link to neighbours
 
   var LANDS = {
@@ -41,12 +42,6 @@
     }
     return p[p.length - 1][1];
   }
-  // column heights in rows (0..ROWS) for a landscape; never quite empty, so a ground line remains
-  function heights(key) {
-    var out = [];
-    for (var c = 0; c < COLS; c++) out.push(0.7 + heightAt(LANDS[key], (c + .5) / COLS) * (ROWS - 0.7));
-    return out;
-  }
 
   class WadiPattern extends HTMLElement {
     connectedCallback() {
@@ -55,21 +50,22 @@
       this.setAttribute('aria-hidden', 'true');
       var self = this, rtl = document.documentElement.dir === 'rtl';
       var q = new URLSearchParams(location.search).get('glyph');
-      var g = q || this.getAttribute('glyph') || 'dash';
-      this.glyph = g === 'dash' ? '-' : '|';
-      // drawn on a canvas as tiny lines (not text), so it looks identical on every device and font
+      this.glyph = (q || this.getAttribute('glyph') || 'dash') === 'dash' ? '-' : '|';
+      this.cols = parseInt(this.getAttribute('cols'), 10) || 40;
+      this.rows = parseInt(this.getAttribute('rows'), 10) || 6;
+      this.cellW = WIDTH / this.cols; this.rowH = HEIGHT / this.rows;
       this.box = document.createElement('canvas'); this.box.className = 'grid';
       this.rtl = rtl;
       this.ctx = this.box.getContext('2d');
       this.view = { mode: null, p: 1 };
       this.append(this.box);
-      this.size(COLS * CW, ROWS * RH);
+      this.size(WIDTH, HEIGHT);
       this.readInk();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); self.draw(); });
 
       var key = location.hash.slice(1);
       this.land = LANDS[key] ? key : 'work';
-      this.th = heights(this.land);
+      this.th = this.heights(this.land);
       this.h = calm.matches ? this.th.slice() : this.th.map(function () { return 0; });
       this.v = this.th.map(function () { return 0; });
       this.next = this.th.map(function () { return null; });
@@ -83,17 +79,24 @@
 
       document.addEventListener('wadi:tab', function (e) { self.morph(e.detail); });
       this.addEventListener('pointerdown', function (e) {
-        var r = self.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * COLS;
-        self.kick(rtl ? COLS - x : x, 14);
+        var r = self.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * self.cols;
+        self.kick(rtl ? self.cols - x : x, 14);
       });
       if (this.hasAttribute('breath') || new URLSearchParams(location.search).get('breath') === '1') {
-        setInterval(function () { if (self.onScreen && !document.hidden) self.kick(COLS / 2, 7); }, 10000);
+        setInterval(function () { if (self.onScreen && !document.hidden) self.kick(self.cols / 2, 7); }, 10000);
       }
+    }
+
+    // column heights in rows (0..rows) for a landscape; never quite empty, so a ground line remains
+    heights(key) {
+      var out = [], base = this.rows * .12;
+      for (var c = 0; c < this.cols; c++) out.push(base + heightAt(LANDS[key], (c + .5) / this.cols) * (this.rows - base));
+      return out;
     }
 
     readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; }
 
-    // canvas size in CSS px; it sits on the element's bottom edge, centred, and may overflow it
+    // canvas size in CSS px; it sits on the element's bottom edge, centred
     size(w, h) {
       w = Math.round(w); h = Math.round(h);
       if (this.cw === w && this.ch === h) return;
@@ -105,153 +108,102 @@
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    // drawn sharp enough to be shown zoomed in by z (the opening hero)
+    // drawn sharp enough to be shown zoomed in by z (the cover)
     setZoom(z) {
       if (this.zoom === z) return;
       this.zoom = z; this.cw = 0; this.draw();
-      if (this.sky) { this.sky.remove(); this.sky = null; this.drawSky(); }
     }
 
-    // opening hero: p 0 = big first screen, 1 = compact
+    // the cover: 0 = alive, rising towards 1 = calm
     setHero(p) {
-      this.view = { mode: p >= 1 ? null : 'shrink', p: p };
+      this.view = { mode: p >= 1 ? null : 'alive', p: p };
       this.draw();
-      this.drawSky();
       this.alive();
     }
 
-    // how alive the big landscape is: full at the top of the page, gone a third of the way into the shrink
     aliveness() {
       var v = this.view;
-      return (v.mode === 'shrink' && !calm.matches) ? Math.max(0, 1 - v.p * 3) : 0;
+      return (v.mode === 'alive' && !calm.matches) ? Math.max(0, 1 - v.p * 3) : 0;
     }
 
-    // keep a gentle loop running only while the big landscape is alive and visible
+    // a gentle loop, only while alive and visible
     alive() {
       if (this.aliveRaf || this.aliveness() <= 0) return;
       var self = this;
-      if (!this.birds) {
-        this.birds = [0, 1, 2].map(function (i) {
-          return { x: [25, 120, 205][i], y0: [16, 25, 8][i], vx: [9, 7, 11][i], seed: i * 2.1 + .7, s: [3.5, 2.8, 3.1][i] };   // in unzoomed px
-        });
-      }
-      var last = performance.now();
       var tick = function (now) {
-        var dt = Math.min(.05, (now - last) / 1000); last = now;
         self.aliveT = now / 1000;
-        if (self.aliveness() <= 0 || document.hidden || self.onScreen === false) {
-          self.aliveRaf = 0; self.aliveT = 0; self.draw(); self.drawSky(); return;
-        }
-        self.birds.forEach(function (b) {
-          b.x += b.vx * dt;
-          if (b.x > self.skyW + 8) { b.x = -8; b.y0 = 6 + Math.random() * 22; }
-        });
+        if (self.aliveness() <= 0 || document.hidden || !self.isConnected) { self.aliveRaf = 0; self.aliveT = 0; self.draw(); return; }
         if (!self.raf) self.draw();      // the physics loop draws too, when it is running
-        self.drawSky();
         self.aliveRaf = requestAnimationFrame(tick);
       };
       this.aliveRaf = requestAnimationFrame(tick);
     }
 
-    // the open sky above the name, where the birds fly; fades out with the shrink (app.js sets --sky-bottom)
-    drawSky() {
-      var a = this.aliveness();
-      if (!this.sky) {
-        if (a <= 0) return;
-        this.sky = document.createElement('canvas'); this.sky.className = 'sky';
-        var z = this.zoom || 1;                                   // the element is zoomed by z, so draw at 1/z
-        this.skyW = Math.min(window.innerWidth, 420) / z; this.skyH = 60 / z;
-        var dpr = Math.min(window.devicePixelRatio || 1, 3) * z;
-        this.sky.width = Math.round(this.skyW * dpr); this.sky.height = Math.round(this.skyH * dpr);
-        this.sky.style.width = this.skyW + 'px'; this.sky.style.height = this.skyH + 'px';
-        this.sky.style.transform = 'translateX(-50%)' + (this.rtl ? ' scaleX(-1)' : '');
-        this.sctx = this.sky.getContext('2d'); this.sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        this.append(this.sky);
-      }
-      var c = this.sctx, t = this.aliveT || 0;
-      c.clearRect(0, 0, this.skyW, this.skyH);
-      this.sky.style.opacity = a.toFixed(3);
-      if (a <= 0 || !this.birds) return;
-      c.strokeStyle = this.ink; c.lineWidth = 1.1 / (this.zoom || 1); c.lineCap = 'round'; c.lineJoin = 'round';
-      this.birds.forEach(function (b) {
-        var y = b.y0 + 2 * Math.sin(t * .8 + b.seed);
-        var flapping = ((t + b.seed * 3) % 4.5) < 1.4;                       // a burst of flaps, then a glide
-        var wing = flapping ? .35 + .65 * Math.sin(t * 11 + b.seed) : .3;
-        c.globalAlpha = .7;
-        c.beginPath();
-        c.moveTo(b.x - b.s, y - b.s * .55 * wing); c.lineTo(b.x, y); c.lineTo(b.x + b.s, y - b.s * .55 * wing);
-        c.stroke();
-      });
-      c.globalAlpha = 1;
-    }
-
-    // the grid at cell scale f (width) and g (height), centred on the bottom edge of a cw x ch canvas
-    layer(cw, ch, f, g, alive) {
-      var c2 = this.ctx, bar = this.glyph === '|', cellW = CW * f, rowH = RH * g, t = this.aliveT || 0;
-      var w = bar ? 1 : 3.6 * f, hgt = bar ? 3 * g : Math.max(1, Math.min(1.5, f * .9));
-      var x0 = cw / 2 - COLS * cellW / 2, fade = COLS * .14;
-      for (var c = 0; c < COLS; c++) {
-        var h = this.h[c];
-        if (alive) h += alive * (.22 * Math.sin(t * .7 - c * .32) + .1 * Math.sin(t * 1.3 + c * .9));   // a slow swell
-        h = Math.max(0, h);
-        var x = x0 + (c + .5) * cellW;
-        var edge = Math.min(1, (c + .5) / fade, (COLS - c - .5) / fade);   // ends fade out
-        edge = edge * edge * (3 - 2 * edge);
-        for (var r = 0; r < ROWS; r++) {
-          var on = Math.max(0, Math.min(1, h - r));
-          if (on <= 0.01) continue;
-          var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / 3));   // brightest at the top, fading down
-          var shimmer = (alive && r === Math.floor(h - .001)) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + c * 2.3)) : 1;   // the ridgeline glints
-          c2.globalAlpha = on * depth * edge * shimmer;
-          c2.fillRect(x - w / 2, ch - (r + .5) * rowH - hgt / 2, w, hgt);
-        }
-      }
-    }
-
     // light the cells: full below the column's height, the top one partly, so heights glide
     draw() {
-      var c2 = this.ctx, cw = COLS * CW, ch = ROWS * RH;
-      this.size(cw, ch); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-      this.layer(cw, ch, 1, 1, this.aliveness());
+      var c2 = this.ctx, cols = this.cols, rows = this.rows, cellW = this.cellW, rowH = this.rowH;
+      var alive = this.aliveness(), t = this.aliveT || 0, bar = this.glyph === '|';
+      var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : Math.max(.7, Math.min(1, rowH * .3));
+      var fade = cols * .14;
+      this.size(WIDTH, HEIGHT);
+      c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
+      for (var c = 0; c < cols; c++) {
+        var h = this.h[c], u = c / cols;
+        if (alive) h += alive * rows * (.04 * Math.sin(t * .7 - u * 12.8) + .018 * Math.sin(t * 1.3 + u * 36));   // a slow swell
+        h = Math.max(0, h);
+        var x = (c + .5) * cellW;
+        var edge = Math.min(1, (c + .5) / fade, (cols - c - .5) / fade);   // ends fade out
+        edge = edge * edge * (3 - 2 * edge);
+        for (var r = 0; r < rows; r++) {
+          var on = Math.max(0, Math.min(1, h - r));
+          if (on <= 0.01) continue;
+          var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / (rows * .5)));   // brightest at the top, fading down
+          var shimmer = (alive && r === Math.floor(h - .001)) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + u * 92)) : 1;   // the ridgeline glints
+          c2.globalAlpha = on * depth * edge * shimmer;
+          c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+        }
+      }
       c2.globalAlpha = 1;
     }
 
     arrive() {
       if (calm.matches) { this.settled = true; return; }
-      var self = this;
+      var self = this, stagger = 880 / this.cols;
       setTimeout(function () {
         var now = performance.now();
-        for (var c = 0; c < COLS; c++) { self.next[c] = self.th[c]; self.th[c] = 0; self.at[c] = now + c * 22; }
+        for (var c = 0; c < self.cols; c++) { self.next[c] = self.th[c]; self.th[c] = 0; self.at[c] = now + c * stagger; }
         self.run();
-        setTimeout(function () { self.settled = true; }, COLS * 22 + 600);
+        setTimeout(function () { self.settled = true; }, 880 + 600);
       }, 120);
     }
 
     morph(key) {
       if (!LANDS[key] || key === this.land) return;
       this.land = key;
-      var hs = heights(key), now = performance.now();
+      var hs = this.heights(key), now = performance.now(), stagger = 560 / this.cols;
       if (calm.matches) { this.h = hs.slice(); this.th = hs.slice(); this.draw(); return; }
-      for (var c = 0; c < COLS; c++) { this.next[c] = hs[c]; this.at[c] = now + c * 14; }
+      for (var c = 0; c < this.cols; c++) { this.next[c] = hs[c]; this.at[c] = now + c * stagger; }
       this.run();
     }
 
     kick(x0, amount) {
       if (calm.matches || !this.settled) return;
-      for (var c = 0; c < COLS; c++) { var d = (c - x0) / 3; this.v[c] += amount * Math.exp(-d * d); }
+      var spread = this.cols / 13;
+      for (var c = 0; c < this.cols; c++) { var d = (c - x0) / spread; this.v[c] += amount * (this.rows / 6) * Math.exp(-d * d); }
       this.run();
     }
 
     step(now, dt) {
-      var busy = false, d = [];
-      for (var c = 0; c < COLS; c++) {
+      var busy = false, d = [], n = this.cols;
+      var link = LINK * Math.pow(n / 40, 2);       // the same wave speed at any density
+      for (var c = 0; c < n; c++) {
         if (this.next[c] !== null && now >= this.at[c]) { this.th[c] = this.next[c]; this.next[c] = null; }
         if (this.next[c] !== null) busy = true;
         d.push(this.h[c] - this.th[c]);
       }
-      for (var j = 0; j < COLS; j++) {
-        var l = j ? d[j - 1] : d[j], r = j < COLS - 1 ? d[j + 1] : d[j];
-        this.v[j] += (-K * d[j] - C * this.v[j] + LINK * (l + r - 2 * d[j])) * dt;
+      for (var j = 0; j < n; j++) {
+        var l = j ? d[j - 1] : d[j], r = j < n - 1 ? d[j + 1] : d[j];
+        this.v[j] += (-K * d[j] - C * this.v[j] + link * (l + r - 2 * d[j])) * dt;
         this.h[j] += this.v[j] * dt;
         if (Math.abs(this.v[j]) > .01 || Math.abs(d[j]) > .01) busy = true;
       }
@@ -263,7 +215,8 @@
       var self = this, last = performance.now();
       var tick = function (now) {
         var dt = Math.min(.032, (now - last) / 1000), busy = false; last = now;
-        for (var k = 0; k < 3; k++) busy = self.step(now, dt / 3) || busy;
+        var sub = self.cols > 40 ? 6 : 3;          // finer grids need smaller steps to stay stable
+        for (var k = 0; k < sub; k++) busy = self.step(now, dt / sub) || busy;
         self.draw();
         self.raf = busy ? requestAnimationFrame(tick) : 0;
       };
