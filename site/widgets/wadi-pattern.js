@@ -14,6 +14,9 @@
      from 0 to 1. The element's own box stays the compact size; while the hero is active the canvas is
      its big size (made once, never resized mid-scroll) and only what is drawn on it changes, so the
      shrink stays smooth. The faded ends are drawn too, so they follow the size.
+     While big it is "alive": a slow swell rolls across the mountains, the ridgeline shimmers faintly and a
+     few small birds (two dash strokes each) flap and glide across in reading direction. All of it fades
+     out as you scroll, leaving the usual compact landscape; it pauses when off screen or hidden.
    It only animates while something is moving; with "reduce motion" it changes shape instantly. */
 (function () {
   if (customElements.get('wadi-pattern')) return;
@@ -109,15 +112,83 @@
     setHero(p) {
       this.view = { mode: p >= 1 ? null : 'shrink', p: p };
       this.draw();
+      this.drawSky();
+      this.alive();
+    }
+
+    // how alive the big landscape is: full at the top of the page, gone a third of the way into the shrink
+    aliveness() {
+      var v = this.view;
+      return (v.mode === 'shrink' && !calm.matches) ? Math.max(0, 1 - v.p * 3) : 0;
+    }
+
+    // keep a gentle loop running only while the big landscape is alive and visible
+    alive() {
+      if (this.aliveRaf || this.aliveness() <= 0) return;
+      var self = this;
+      if (!this.birds) {
+        this.birds = [0, 1, 2].map(function (i) {
+          return { x: [40, 190, 330][i], y0: [26, 40, 12][i], vx: [15, 11, 18][i], seed: i * 2.1 + .7, s: [5.6, 4.4, 5][i] };
+        });
+      }
+      var last = performance.now();
+      var tick = function (now) {
+        var dt = Math.min(.05, (now - last) / 1000); last = now;
+        self.aliveT = now / 1000;
+        if (self.aliveness() <= 0 || document.hidden || self.onScreen === false) {
+          self.aliveRaf = 0; self.aliveT = 0; self.draw(); self.drawSky(); return;
+        }
+        self.birds.forEach(function (b) {
+          b.x += b.vx * dt;
+          if (b.x > self.skyW + 12) { b.x = -12; b.y0 = 10 + Math.random() * 34; }
+        });
+        if (!self.raf) self.draw();      // the physics loop draws too, when it is running
+        self.drawSky();
+        self.aliveRaf = requestAnimationFrame(tick);
+      };
+      this.aliveRaf = requestAnimationFrame(tick);
+    }
+
+    // the open sky above the name, where the birds fly; fades out with the shrink (app.js sets --sky-bottom)
+    drawSky() {
+      var a = this.aliveness();
+      if (!this.sky) {
+        if (a <= 0) return;
+        this.sky = document.createElement('canvas'); this.sky.className = 'sky';
+        this.skyW = Math.min(window.innerWidth, 420); this.skyH = 60;
+        var dpr = Math.min(window.devicePixelRatio || 1, 3);
+        this.sky.width = Math.round(this.skyW * dpr); this.sky.height = Math.round(this.skyH * dpr);
+        this.sky.style.width = this.skyW + 'px'; this.sky.style.height = this.skyH + 'px';
+        this.sky.style.transform = 'translateX(-50%)' + (this.rtl ? ' scaleX(-1)' : '');
+        this.sctx = this.sky.getContext('2d'); this.sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.append(this.sky);
+      }
+      var c = this.sctx, t = this.aliveT || 0;
+      c.clearRect(0, 0, this.skyW, this.skyH);
+      this.sky.style.opacity = a.toFixed(3);
+      if (a <= 0 || !this.birds) return;
+      c.strokeStyle = this.ink; c.lineWidth = 1.1; c.lineCap = 'round'; c.lineJoin = 'round';
+      this.birds.forEach(function (b) {
+        var y = b.y0 + 2 * Math.sin(t * .8 + b.seed);
+        var flapping = ((t + b.seed * 3) % 4.5) < 1.4;                       // a burst of flaps, then a glide
+        var wing = flapping ? .35 + .65 * Math.sin(t * 11 + b.seed) : .3;
+        c.globalAlpha = .7;
+        c.beginPath();
+        c.moveTo(b.x - b.s, y - b.s * .55 * wing); c.lineTo(b.x, y); c.lineTo(b.x + b.s, y - b.s * .55 * wing);
+        c.stroke();
+      });
+      c.globalAlpha = 1;
     }
 
     // the grid at cell scale f (width) and g (height), centred on the bottom edge of a cw x ch canvas
-    layer(cw, ch, f, g) {
-      var c2 = this.ctx, bar = this.glyph === '|', cellW = CW * f, rowH = RH * g;
+    layer(cw, ch, f, g, alive) {
+      var c2 = this.ctx, bar = this.glyph === '|', cellW = CW * f, rowH = RH * g, t = this.aliveT || 0;
       var w = bar ? 1 : 3.6 * f, hgt = bar ? 3 * g : Math.max(1, Math.min(1.5, f * .9));
       var x0 = cw / 2 - COLS * cellW / 2, fade = COLS * .14;
       for (var c = 0; c < COLS; c++) {
-        var h = Math.max(0, this.h[c]);
+        var h = this.h[c];
+        if (alive) h += alive * (.22 * Math.sin(t * .7 - c * .32) + .1 * Math.sin(t * 1.3 + c * .9));   // a slow swell
+        h = Math.max(0, h);
         var x = x0 + (c + .5) * cellW;
         var edge = Math.min(1, (c + .5) / fade, (COLS - c - .5) / fade);   // ends fade out
         edge = edge * edge * (3 - 2 * edge);
@@ -125,7 +196,8 @@
           var on = Math.max(0, Math.min(1, h - r));
           if (on <= 0.01) continue;
           var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / 3));   // brightest at the top, fading down
-          c2.globalAlpha = on * depth * edge;
+          var shimmer = (alive && r === Math.floor(h - .001)) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + c * 2.3)) : 1;   // the ridgeline glints
+          c2.globalAlpha = on * depth * edge * shimmer;
           c2.fillRect(x - w / 2, ch - (r + .5) * rowH - hgt / 2, w, hgt);
         }
       }
@@ -140,7 +212,7 @@
         var e = ease(v.p), f = BIG_F + (1 - BIG_F) * e, g = BIG_G + (1 - BIG_G) * e;
         this.size(cw * BIG_F, ch * BIG_G);                       // the big size, kept for the whole shrink
         c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
-        this.layer(this.cw, this.ch, f, g);
+        this.layer(this.cw, this.ch, f, g, this.aliveness());
       } else {
         this.size(cw, ch); c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
         this.layer(cw, ch, 1, 1);

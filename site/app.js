@@ -94,6 +94,7 @@
     var groupH=nameH*NAME_BIG+GAP+LAND_BIG_H, top=heroH0*.44-groupH/2;           // the big group, centred a little high
     nameY0=top-(nameTop+nameH/2-nameH*NAME_BIG/2);
     landY0=top+nameH*NAME_BIG+GAP+LAND_BIG_H-landBottom;
+    pat.style.setProperty('--sky-bottom',(2+LAND_BIG_H+GAP+nameH*NAME_BIG+14).toFixed(0)+'px');   // birds fly just above the big name
     lastP=-1; heroUpdate();
   }
   function heroUpdate(){

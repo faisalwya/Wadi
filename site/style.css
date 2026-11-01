@@ -91,6 +91,8 @@ wadi-pattern{display:block;position:relative;width:220px;height:24px;max-width:1
   touch-action:manipulation;-webkit-user-select:none;user-select:none}
 /* the canvas sits on the bottom edge and may grow past the box (opening hero); its faded ends are drawn in */
 wadi-pattern .grid{display:block;position:absolute;left:50%;bottom:2px}
+/* the birds' sky, above the big name on the opening screen */
+wadi-pattern .sky{display:block;position:absolute;left:50%;bottom:var(--sky-bottom,140px);pointer-events:none}
 
 /* opening hero (first visit): the name and landscape start big and shrink into place as you scroll.
    app.js sets the hero's height and the sizes; without it (reduce motion, return visits) nothing changes */
