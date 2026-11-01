@@ -173,8 +173,7 @@
   function tick(){
     var d=new Date(Date.now()+3*3600*1000);
     var p=function(n){return (n<10?'0':'')+n;};
-    var el=document.getElementById('clock');
-    if(el) el.innerHTML=p(d.getUTCHours())+'<i>:</i>'+p(d.getUTCMinutes());   // the colon gently blinks
+    document.getElementById('clock').textContent=p(d.getUTCHours())+':'+p(d.getUTCMinutes());
   }
   tick(); setInterval(tick,30000);
 })();

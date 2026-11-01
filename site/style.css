@@ -71,18 +71,6 @@ a.vis:active{transform:scale(.985)}
 .ch svg{flex:none;margin-top:12px;stroke:var(--muted);transition:transform .25s ease}
 .ch:hover svg{transform:translate(2px,-2px)}
 .where{margin:20px 0 0;font-size:13px;color:var(--muted)}
-/* Contact: an opening line, email and call, and a small studio card */
-.lead{margin:2px 0 18px;font-family:var(--display);font-weight:400;font-size:clamp(30px,8.4vw,38px);line-height:1.1;letter-spacing:-.025em;text-wrap:balance;color:var(--fg)}
-.lead span{color:var(--muted)}
-.studio{display:grid;grid-template-columns:1fr auto;gap:16px;margin:26px 0 0;padding-top:18px;border-top:1px solid var(--line)}
-.studio div{margin:0}
-.studio div:last-child{text-align:end}   /* the clock column lines up with the outer edge */
-.studio dt{font-size:12.5px;color:var(--muted);margin-bottom:4px}
-.studio dd{margin:0;font-size:14.5px;color:var(--soft)}
-.studio .time{font-family:var(--display);font-size:24px;line-height:1;color:var(--fg);text-align:end;font-variant-numeric:tabular-nums}
-.studio .time i{font-style:normal;animation:blink 2s steps(1) infinite}
-@keyframes blink{50%{opacity:.25}}
-[dir="rtl"] .studio .time{text-align:left}   /* the clock column sits on the left in Arabic */
 .go{display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:44px;font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
 .go svg,.next svg{stroke:currentColor;transition:transform .25s ease}
 .go:active svg,.go:hover svg{transform:translate(2px,-2px)}
@@ -167,8 +155,6 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(16px, env(sa
 [lang="ar"] .ch .nm{line-height:1.35}
 [lang="ar"] .body{font-size:16.5px;line-height:1.75}
 [lang="ar"] .sub,[lang="ar"] .label,[lang="ar"] .where{font-size:14px}
-[lang="ar"] .lead{letter-spacing:0;line-height:1.35}
-[lang="ar"] .studio dt{font-size:13.5px}
 [lang="ar"] .tab{font-size:14.5px}
 [lang="ar"] .lang{font-size:14px}
 /* arrows point the reading direction */
