@@ -53,22 +53,16 @@
       var q = new URLSearchParams(location.search).get('glyph');
       var g = q || this.getAttribute('glyph') || 'dash';
       this.glyph = g === 'dash' ? '-' : '|';
-      this.classList.add(this.glyph === '|' ? 'g-bar' : 'g-dash');
-      this.box = document.createElement('div'); this.box.className = 'grid';
+      // drawn on a canvas as tiny lines (not text), so it looks identical on every device and font
+      this.box = document.createElement('canvas'); this.box.className = 'grid';
+      var dpr = Math.min(window.devicePixelRatio || 1, 3);
+      this.box.width = Math.round(COLS * CW * dpr); this.box.height = Math.round(ROWS * RH * dpr);
       this.box.style.width = (COLS * CW) + 'px'; this.box.style.height = (ROWS * RH) + 'px';
       if (rtl) this.box.style.transform = 'scaleX(-1)';             // waves start where reading starts
-      this.cells = [];
-      for (var c = 0; c < COLS; c++) {
-        var col = [];
-        for (var r = 0; r < ROWS; r++) {
-          var s = document.createElement('span');
-          s.textContent = this.glyph;
-          s.style.transform = 'translate(' + (c * CW).toFixed(1) + 'px,' + ((ROWS - 1 - r) * RH) + 'px)';
-          this.box.append(s); col.push(s);
-        }
-        this.cells.push(col);
-      }
+      this.ctx = this.box.getContext('2d'); this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.append(this.box);
+      this.readInk();
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); self.draw(); });
 
       var key = location.hash.slice(1);
       this.land = LANDS[key] ? key : 'work';
@@ -94,18 +88,26 @@
       }
     }
 
+    readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; }
+
     // light the cells: full below the column's height, the top one partly, so heights glide
     draw() {
+      var c2 = this.ctx, bar = this.glyph === '|';
+      var w = bar ? 1 : 3.6, hgt = bar ? 3 : 1;                       // a dash, or a short upright bar
+      c2.clearRect(0, 0, COLS * CW, ROWS * RH);
+      c2.fillStyle = this.ink;
       for (var c = 0; c < COLS; c++) {
         var h = Math.max(0, this.h[c]);
         for (var r = 0; r < ROWS; r++) {
           var on = Math.max(0, Math.min(1, h - r));
+          if (on <= 0.01) continue;
           var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / 3));   // brightest at the top, fading down
-          var o = on * depth;
-          var s = this.cells[c][r], val = o.toFixed(2);
-          if (s._o !== val) { s.style.opacity = val; s._o = val; }
+          c2.globalAlpha = on * depth;
+          var cx = c * CW + CW / 2, cy = (ROWS - 1 - r) * RH + RH / 2;
+          c2.fillRect(cx - w / 2, cy - hgt / 2, w, hgt);
         }
       }
+      c2.globalAlpha = 1;
     }
 
     arrive() {
