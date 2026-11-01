@@ -1,70 +1,87 @@
-/* <wadi-pattern motif="lozenge|lattice|line"></wadi-pattern>
-   A slim ribbon under the studio name, drawn only with everyday symbols ( ) : ; / \ . < >.
-   A small motif repeats along it, loosely recalling a geometric border, and the ribbon
-   glides sideways as you scroll (in both directions; it never moves on its own).
-   - Plain text, so it stays crisp and costs almost nothing.
-   - Still with "reduce motion"; colour follows the site (light/dark).
-   - For comparing on a preview, ?pattern=lozenge|lattice|line in the URL overrides the attribute. */
+/* <wadi-pattern></wadi-pattern>
+   A slim ornament under the studio name, drawn only with everyday symbols.
+   It is built around a centre point and mirrored, denser and darker in the middle,
+   thinning and fading towards the ends, with facing brackets )( like links in a chain.
+
+   Movement (never constant; all of it off with "reduce motion"):
+   - on arrival it draws itself once, from the centre outwards
+   - when you switch tabs, a ripple runs along it: symbols briefly turn into their
+     neighbours ( to <, . to :, : to ; ) and settle back
+   - tapping it sends a ripple out from where you touched
+   - optional "breath": ?breath=1 in the URL (or a breath attribute) runs a soft ripple
+     every ~10 s while it is on screen */
 (function () {
   if (customElements.get('wadi-pattern')) return;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // each motif: rows of equal length; the ribbon repeats them side by side
-  var MOTIFS = {
-    // small roundels (:) alternating with diamonds
-    lozenge: ['  .  /\\ ',
-              ' (:)<  >',
-              "  '  \\/ "],
-    // crossing diagonals, like a strapwork lattice
-    lattice: ['\\../',
-              '.><.',
-              '/..\\'],
-    // a single quiet line
-    line:    [' (:) . < > . ']
-  };
+  // right half, read outwards from the centre ':'; the left half is its mirror image
+  var RIGHT = ') . )( :  .  -   .    .';
+  var MIRROR = { '(': ')', ')': '(', '<': '>', '>': '<', '/': '\\', '\\': '/' };
+  var NEXT = { '(': '<', ')': '>', '.': ':', ':': ';', '-': '=', '<': '(', '>': ')', ';': ':' };
+
+  function buildLine() {
+    var left = RIGHT.split('').reverse().map(function (ch) { return MIRROR[ch] || ch; }).join('');
+    return left + ':' + RIGHT;
+  }
 
   class WadiPattern extends HTMLElement {
     connectedCallback() {
       if (this._ready) return;
       this._ready = true;
-      var q = new URLSearchParams(location.search).get('pattern');
-      var name = MOTIFS[q] ? q : (MOTIFS[this.getAttribute('motif')] ? this.getAttribute('motif') : 'lozenge');
-      this.rowsSrc = MOTIFS[name];
       this.setAttribute('aria-hidden', 'true');
-      this.box = document.createElement('div');
-      this.box.className = 'rows'; this.box.dir = 'ltr';
-      this.append(this.box);
-      var self = this, ticking = false;
-      new ResizeObserver(function () { self.build(); }).observe(this);
-      window.addEventListener('scroll', function () {
-        if (calm.matches || ticking) return;
-        ticking = true;
-        requestAnimationFrame(function () { ticking = false; self.place(); });
-      }, { passive: true });
+      this.dir = 'ltr';
+      var line = buildLine(), mid = (line.length - 1) / 2, self = this;
+      this.mid = mid;
+      this.cells = line.split('').map(function (ch, i) {
+        var s = document.createElement('span'), d = Math.abs(i - mid) / mid;
+        s.textContent = ch;
+        s.dataset.ch = ch;
+        s.style.setProperty('--o', (1 - 0.82 * Math.pow(d, 1.3)).toFixed(3));   // darker in the middle
+        s.style.setProperty('--d', Math.round(Math.abs(i - mid) * 22) + 'ms');   // arrival delay, centre first
+        self.append(s);
+        return s;
+      });
+
+      // arrival: draw once, from the centre outwards, when it first comes into view
+      var io = new IntersectionObserver(function (es) {
+        self.onScreen = es[0].isIntersecting;
+        if (self.onScreen && !self.arrived) {
+          self.arrived = true;
+          if (calm.matches) self.classList.add('in', 'now');
+          else requestAnimationFrame(function () { self.classList.add('in'); });
+          setTimeout(function () { self.settled = true; }, 900);
+        }
+      });
+      io.observe(this);
+
+      // ripple when the visitor switches tabs (app.js announces it)
+      document.addEventListener('wadi:tab', function () { self.ripple(self.mid); });
+      // ripple from where it is tapped
+      this.addEventListener('pointerdown', function (e) {
+        var r = self.getBoundingClientRect();
+        self.ripple(Math.round((e.clientX - r.left) / r.width * (self.cells.length - 1)));
+      });
+      // optional breath
+      if (this.hasAttribute('breath') || new URLSearchParams(location.search).get('breath') === '1') {
+        setInterval(function () { if (self.onScreen && !document.hidden) self.ripple(self.mid, true); }, 10000);
+      }
     }
 
-    build() {
-      var W = this.getBoundingClientRect().width;
-      if (!W) return;
-      var len = this.rowsSrc[0].length;
-      // measure one character
-      var probe = document.createElement('span'); probe.textContent = 'MMMMMMMMMM';
-      this.box.textContent = ''; this.box.append(probe);
-      this.cw = probe.getBoundingClientRect().width / 10;
-      this.period = len * this.cw;
-      var reps = Math.ceil(W / this.period) + 3, rows = [];
-      this.rowsSrc.forEach(function (r) { rows.push(r.repeat(reps)); });
-      this.box.textContent = rows.join('\n');
-      // centre a motif under the middle of the title
-      this.base = ((W / 2 - this.period / 2) % this.period) - this.period;
-      this.place();
-    }
-
-    place() {
-      if (!this.period) return;
-      var s = calm.matches ? 0 : window.scrollY * 0.35;
-      var x = this.base - (s % this.period);
-      this.box.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+    // symbols turn into their neighbours one after another, spreading out from `from`, then settle back
+    ripple(from, soft) {
+      if (calm.matches || !this.settled || this.busy) return;
+      this.busy = true;
+      var self = this, step = soft ? 55 : 32, hold = soft ? 260 : 170, far = 0;
+      this.cells.forEach(function (s, i) {
+        var ch = s.dataset.ch, alt = NEXT[ch], dist = Math.abs(i - from);
+        far = Math.max(far, dist);
+        if (!alt) return;
+        setTimeout(function () {
+          s.textContent = alt; s.classList.add('lit');
+          setTimeout(function () { s.textContent = ch; s.classList.remove('lit'); }, hold);
+        }, dist * step);
+      });
+      setTimeout(function () { self.busy = false; }, far * step + hold + 50);
     }
   }
 

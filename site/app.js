@@ -4,7 +4,7 @@
   var label=document.getElementById('label'), ind=document.getElementById('ind'), next=document.getElementById('next');
   var calm=window.matchMedia('(prefers-reduced-motion: reduce)');
   var tabs=[].slice.call(document.querySelectorAll('.tab'));
-  var rtl=document.documentElement.dir==='rtl';
+  var rtl=document.documentElement.dir==='rtl', started=false;
 
   function clearSel(view){
     view.classList.remove('has-sel');
@@ -24,6 +24,8 @@
     tabs.forEach(function(t){t.setAttribute('aria-pressed', t.dataset.tab===key?'true':'false');});
     ind.style.transform='translateX('+(keys.indexOf(key)*100*(rtl?-1:1))+'%)';
     next.hidden=(key==='contact');
+    if(started) document.dispatchEvent(new CustomEvent('wadi:tab',{detail:key}));  // lets widgets react to tab changes
+    started=true;
   }
   tabs.forEach(function(t){t.addEventListener('click',function(){
     var k=t.dataset.tab;
