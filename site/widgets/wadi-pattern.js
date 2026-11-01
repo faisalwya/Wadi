@@ -1,45 +1,34 @@
-/* <wadi-pattern></wadi-pattern>
-   A slim ornament under the studio name: three short rows of line-like symbols
-   ( ) / \ | - + < > that join into shapes. At the centre a small radiating star,
-     \|/
-    (-+-)
-     /|\
-   and on each side a woven chain of crossing diagonals with diamonds between them.
-   Mirrored left/right and top/bottom, darker at the centre and fading to the ends.
+/* <wadi-pattern pattern="wave|diamonds|evolve|beads"></wadi-pattern>
+   A slim ornament under the studio name, made only of line-like symbols ( ) / \ | - _ < >
+   that join into shapes. The ends fade out.
+
+   Patterns:
+   - wave      two rows: one continuous zigzag running along the ribbon
+   - diamonds  two rows: a chain of small diamonds
+   - evolve    two rows: sparse dashes that gradually build into a dense diamond lattice
+   - beads     one row, mirrored: brackets forming diamonds and circles around a centre
+   For comparing on a preview, ?pattern=<name> in the URL overrides the attribute.
 
    Movement (never constant; all of it off with "reduce motion"):
-   - on arrival it draws itself once, from the centre outwards
-   - when you switch tabs, a ripple runs out from the centre: each column flips
-     (/ to \, < to >, | to -), so the chain turns inside out for a moment and settles back
+   - on arrival it draws itself once (from the centre, or from where reading starts)
+   - when you switch tabs, a ripple runs along it: each column flips (/ to \, < to >,
+     ( to ), | to -), turning the shapes inside out for a moment, then settles back
    - tapping it sends the ripple out from where you touched
-   - optional "breath": ?breath=1 in the URL (or a breath attribute) runs a soft ripple
-     every ~10 s while it is on screen */
+   - optional "breath": ?breath=1 (or a breath attribute) runs a soft ripple every ~10 s */
 (function () {
   if (customElements.get('wadi-pattern')) return;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var UNITS = 3;                                                                  // chain links on each side
-  var SIDE = { '(': ')', ')': '(', '<': '>', '>': '<', '/': '\\', '\\': '/' };   // left-right mirror
-  var UPDOWN = { '/': '\\', '\\': '/' };                                        // top-bottom mirror
-  var FLIP = { '/': '\\', '\\': '/', '<': '>', '>': '<', '|': '-', '-': '|', '(': ')', ')': '(' };
-
-  // Columns of the right half as [top, middle]; the left half mirrors them and the
-  // bottom row is the top row turned upside down.
-  function rightHalf() {
-    var cols = [['/', '-'], [' ', ')'], [' ', ' ']];                 // right side of the star, then a gap
-    for (var u = 0; u < UNITS; u++) cols.push(['\\', ' '], [' ', '>'], [' ', '<'], ['/', ' ']);  // one crossing link
-    cols.push([' ', ' '], [' ', '-']);                                // a short tail
-    return cols;
-  }
-  function grid() {
-    var R = rightHalf();
-    var L = R.slice().reverse().map(function (c) { return [SIDE[c[0]] || c[0], SIDE[c[1]] || c[1]]; });
-    var all = L.concat([['|', '+']], R);
-    var top = all.map(function (c) { return c[0]; }).join('');
-    var mid = all.map(function (c) { return c[1]; }).join('');
-    var bot = top.split('').map(function (ch) { return UPDOWN[ch] || ch; }).join('');
-    return [top, mid, bot];
-  }
+  function rep(s, n) { return s.repeat(n); }
+  // from: where arrival and tab ripples start: 'centre', or 'start' (where reading starts)
+  var PATTERNS = {
+    wave:     { from: 'start',  rows: [rep(' /\\ ', 9), rep('/  \\', 9)] },
+    diamonds: { from: 'centre', rows: [rep('/\\ ', 12), rep('\\/ ', 12)] },
+    evolve:   { from: 'start',  rows: ['        _   _  _ _ /\\ /\\/\\/\\/\\/\\/\\/\\/\\',
+                                       '-  -  - - -- -- -- \\/ \\/\\/\\/\\/\\/\\/\\/\\/'] },
+    beads:    { from: 'centre', rows: ['- () -<>- () -<>-(|)-<>- () -<>- () -'] }
+  };
+  var FLIP = { '/': '\\', '\\': '/', '<': '>', '>': '<', '|': '-', '-': '|', '(': ')', ')': '(', '_': '-' };
 
   class WadiPattern extends HTMLElement {
     connectedCallback() {
@@ -47,15 +36,23 @@
       this._ready = true;
       this.setAttribute('aria-hidden', 'true');
       this.dir = 'ltr';
-      var rows = grid(), n = rows[0].length, mid = (n - 1) / 2, self = this;
-      this.mid = mid; this.cols = [];
+      var q = new URLSearchParams(location.search).get('pattern');
+      var name = PATTERNS[q] ? q : (PATTERNS[this.getAttribute('pattern')] ? this.getAttribute('pattern') : 'wave');
+      var pat = PATTERNS[name], rows = pat.rows, n = rows[0].length, self = this;
+      var rtl = document.documentElement.dir === 'rtl';
+      this.mid = (n - 1) / 2;
+      this.origin = pat.from === 'centre' ? this.mid : (rtl ? n - 1 : 0);
+      this.cols = [];
+      this.className = 'p-' + name;
       rows.forEach(function (row, r) {
         var line = document.createElement('div');
         row.split('').forEach(function (ch, i) {
-          var s = document.createElement('span'), d = Math.abs(i - mid) / mid;
+          var s = document.createElement('span');
+          var edge = Math.min(i + 1, n - i) / 7;                                   // fade over the last few characters
+          var centre = pat.from === 'centre' ? 1 - 0.35 * Math.abs(i - self.mid) / self.mid : 1;
           s.textContent = ch; s.dataset.ch = ch;
-          s.style.setProperty('--o', (1 - 0.78 * Math.pow(d, 1.25)).toFixed(3));                      // darker at the centre
-          s.style.setProperty('--d', Math.round(Math.abs(i - mid) * 26 + Math.abs(r - 1) * 45) + 'ms'); // centre first
+          s.style.setProperty('--o', (Math.min(1, edge) * centre * 0.9).toFixed(3));
+          s.style.setProperty('--d', Math.round(Math.abs(i - self.origin) * 20 + r * 40) + 'ms');
           line.append(s);
           (self.cols[i] = self.cols[i] || []).push(s);
         });
@@ -68,17 +65,17 @@
           self.arrived = true;
           if (calm.matches) self.classList.add('in', 'now');
           else requestAnimationFrame(function () { self.classList.add('in'); });
-          setTimeout(function () { self.settled = true; }, 1100);
+          setTimeout(function () { self.settled = true; }, 1200);
         }
       }).observe(this);
 
-      document.addEventListener('wadi:tab', function () { self.ripple(self.mid); });
+      document.addEventListener('wadi:tab', function () { self.ripple(self.origin); });
       this.addEventListener('pointerdown', function (e) {
         var r = self.getBoundingClientRect();
         self.ripple(Math.round((e.clientX - r.left) / r.width * (self.cols.length - 1)));
       });
       if (this.hasAttribute('breath') || new URLSearchParams(location.search).get('breath') === '1') {
-        setInterval(function () { if (self.onScreen && !document.hidden) self.ripple(self.mid, true); }, 10000);
+        setInterval(function () { if (self.onScreen && !document.hidden) self.ripple(self.origin, true); }, 10000);
       }
     }
 
@@ -86,7 +83,7 @@
     ripple(from, soft) {
       if (calm.matches || !this.settled || this.busy) return;
       this.busy = true;
-      var self = this, step = soft ? 55 : 34, hold = soft ? 300 : 200, far = 0;
+      var self = this, step = soft ? 45 : 26, hold = soft ? 300 : 200, far = 0;
       this.cols.forEach(function (col, i) {
         var dist = Math.abs(i - from); far = Math.max(far, dist);
         setTimeout(function () {
