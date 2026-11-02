@@ -150,7 +150,7 @@
     draw() {
       var c2 = this.ctx, cols = this.cols, rows = this.rows, cellW = this.cellW, rowH = this.rowH;
       var alive = this.aliveness(), t = this.aliveT || 0, bar = this.glyph === '|';
-      var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : Math.max(.7, Math.min(1, rowH * .3));
+      var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : (rows <= 6 ? 1.3 : Math.max(.7, Math.min(1, rowH * .3)));   // the small landscape gets slightly bolder dashes
       var fade = cols * .14;
       this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
       c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
