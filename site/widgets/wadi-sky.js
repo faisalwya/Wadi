@@ -3,7 +3,8 @@
    each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
    in reading direction; and the time of day, following light/dark mode: by day a sun, by night a
    crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
-   round), to one side of the sky; at night a dozen faint dash stars twinkle, each at its own pace.
+   round), to one side of the sky, with a glow of faint dashes around it; at night a dozen faint dash stars
+   twinkle, each at its own pace.
    It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
    close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
    arriving, phone toolbars moving); birds already flying glide into the new band.
@@ -34,7 +35,7 @@
 
     disconnectedCallback() { cancelAnimationFrame(this.raf); this.raf = 0; }
 
-    readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; this.night = window.matchMedia('(prefers-color-scheme: dark)').matches; }
+    readInk() { var cs = getComputedStyle(this); this.ink = cs.color || '#3F3D38'; this.glow = cs.getPropertyValue('--fg').trim() || this.ink; this.night = window.matchMedia('(prefers-color-scheme: dark)').matches; }
 
     resize() {
       var r = this.getBoundingClientRect();
@@ -85,34 +86,48 @@
     }
 
     drawSky(c, t) {
-      // a finer grid than the mountains, so the small disc reads round; centred so it is symmetrical
-      var CW = 3.3, RH = 2.6, DW = 2.3, DH = 1;
-      var R = 14, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
-      var mx = x0 + R * .5, my = y0 - R * .2, mR = R * .9;         // the shadow that carves the crescent
-      if (this.night) this.drawStars(c, t, x0, y0, R);
-      var nx = Math.ceil((R + 7) / CW), ny = Math.ceil((R + 7) / RH);
+      // a fine, centred grid of small dashes (rows offset by half a cell so the disc reads round); the brightest
+      // dashes use the strongest ink, as the light does on the hills, and a halo of faint dashes makes the glow
+      var CW = 2.7, RH = 2.2, DW = 1.9, DH = .9, HALO = 11;
+      var R = 15, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
+      var mx = x0 + R * .5, my = y0 - R * .2, mR = R * .9;          // the shadow that carves the crescent
+      var night = this.night;
+      if (night) this.drawStars(c, t, x0, y0, R + HALO);
+      var nx = Math.ceil((R + HALO) / CW), ny = Math.ceil((R + HALO) / RH);
       for (var j = -ny; j <= ny; j++) {
         for (var i = -nx; i <= nx; i++) {
-          var x = i * CW + (j % 2 ? CW / 2 : 0), y = j * RH;        // rows offset by half a cell: a rounder edge
-          var d = Math.hypot(x, y), a = 0;
-          var rim = Math.max(0, Math.min(1, (R - d) / 1.8 + .5));     // dashes soften at the very edge
-          if (rim > 0) {
-            if (this.night) {
-              var shade = Math.max(0, Math.min(1, (mR - Math.hypot(x0 + x - mx, y0 + y - my)) / 1.6 + .5));
-              a = rim * ((.64 - .2 * (d / R)) * (1 - shade) + .07 * shade);   // the crescent, and the faint dark side
-            } else {
-              a = rim * (.62 - .28 * (d / R));                                 // the sun, densest at its centre
+          var x = i * CW + (j % 2 ? CW / 2 : 0), y = j * RH;
+          var d = Math.hypot(x, y), ang = Math.atan2(y, x);
+          if (d > R + HALO) continue;
+          var rim = Math.max(0, Math.min(1, (R - d) / 1.6 + .5));     // dashes soften at the very edge
+          var lit, a = 0, bright = 0;
+          if (night) {
+            var s2 = (mR - Math.hypot(x0 + x - mx, y0 + y - my)) / 3.2 + .5;
+            var shade = Math.max(0, Math.min(1, s2)); shade = shade * shade * (3 - 2 * shade);   // a soft edge of shadow
+            lit = 1 - shade;
+            if (rim > 0) {
+              var limb = d > R - 3.5 ? .85 + .15 * Math.sin(t * 1.7 + ang * 5) : 1;   // the lit edge glints slowly
+              bright = rim * lit * (.62 + .3 * (1 - d / R)) * limb;
+              a = rim * .06 * shade;                                                  // the faint dark side
+            }
+            // glow: faint dashes spilling out beside the lit crescent, fading outwards
+            if (d > R - 1) {
+              var face = Math.max(0, -(x * .9 + y * .4) / (d || 1));   // towards the lit side
+              var g = Math.pow(Math.max(0, 1 - (d - R) / HALO), 1.6) * (.25 + .75 * face);
+              a = Math.max(a, .16 * g * (.85 + .15 * Math.sin(t * .6 + ang * 3)));
+            }
+          } else {
+            if (rim > 0) bright = rim * (.7 - .32 * (d / R));          // the sun: a brighter core
+            if (d > R - 1) {
+              var gs = Math.pow(Math.max(0, 1 - (d - R) / HALO), 1.4);
+              a = Math.max(a, .13 * gs * (.6 + .4 * Math.sin(t * .8 + ang * 2)));   // a soft halo, breathing slowly
             }
           }
-          if (!this.night && d > R - 1 && d <= R + 7) {
-            a = Math.max(a, .1 * (1 - (d - R) / 7) * (.6 + .4 * Math.sin(t * .8 + Math.atan2(y, x) * 2)));   // a faint halo, breathing slowly
-          }
-          if (a <= .01) continue;
-          c.globalAlpha = a;
-          c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH);
+          if (a > .01) { c.fillStyle = this.ink; c.globalAlpha = a; c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH); }
+          if (bright > .01) { c.fillStyle = this.glow; c.globalAlpha = bright; c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH); }
         }
       }
-      c.globalAlpha = 1;
+      c.fillStyle = this.ink; c.globalAlpha = 1;
     }
 
     // night: tiny dash glimmers scattered across the sky, each twinkling at its own pace, now and then a brief glint
