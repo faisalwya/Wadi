@@ -2,6 +2,8 @@
 
 Services site for Wadi Studio (placeholder name). Live at https://wadi-studio.netlify.app
 
+Read `DESIGN.md` first: it records the design decisions, the owner's preferences and how to work on the site.
+
 - The site is static files with no build step, in two languages that share one look and one behaviour:
   - `site/index.html` is the English page (words only) and `site/ar/index.html` the Arabic page (words only, right-to-left).
   - `site/style.css` is the shared look and `site/app.js` the shared behaviour. Change them once and both languages update.
