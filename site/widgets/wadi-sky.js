@@ -2,7 +2,8 @@
    The cover's sky, drawn in the same dash language as the landscape: five birds (two dash strokes
    each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
    in reading direction; and the time of day, following light/dark mode: by day a sun, by night a
-   crescent moon, both drawn as a grid of the same small dashes as the mountains, to one side of the sky.
+   crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
+   round), to one side of the sky; at night a dozen faint dash stars twinkle, each at its own pace.
    It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
    close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
    arriving, phone toolbars moving); birds already flying glide into the new band.
@@ -50,6 +51,7 @@
       var nameTop = nr ? nr.top - r.top : this.H * .4;
       this.skyBottom = nameTop - 20;                               // just above the name
       this.skyTop = Math.max(24, nameTop - 120);
+      this.stars = null;                                           // stars are placed again for the new sky
       if (!this.birds) this.setup();
       else if (oldBottom !== undefined && (oldTop !== this.skyTop || oldBottom !== this.skyBottom)) {
         var self = this, span = (oldBottom - oldTop) || 1;
@@ -82,27 +84,55 @@
     }
 
     drawSky(c, t) {
-      var CW = 4.9, RH = 3.5, DW = 3.2, DH = 1.1;                  // the cover landscape's cell and dash size, as shown
-      var R = 13, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
-      var mx = x0 + R * .55, my = y0 - R * .22, mR = R * .92;      // the shadow that carves the crescent
-      for (var y = -R - 6; y <= R + 6; y += RH) {
-        for (var x = -R - 6; x <= R + 6; x += CW) {
+      // a finer grid than the mountains, so the small disc reads round; centred so it is symmetrical
+      var CW = 3.3, RH = 2.6, DW = 2.3, DH = 1;
+      var R = 14, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
+      var mx = x0 + R * .5, my = y0 - R * .2, mR = R * .9;         // the shadow that carves the crescent
+      if (this.night) this.drawStars(c, t, x0, y0, R);
+      var nx = Math.ceil((R + 7) / CW), ny = Math.ceil((R + 7) / RH);
+      for (var j = -ny; j <= ny; j++) {
+        for (var i = -nx; i <= nx; i++) {
+          var x = i * CW + (j % 2 ? CW / 2 : 0), y = j * RH;        // rows offset by half a cell: a rounder edge
           var d = Math.hypot(x, y), a = 0;
-          if (d <= R) {
+          var rim = Math.max(0, Math.min(1, (R - d) / 1.8 + .5));     // dashes soften at the very edge
+          if (rim > 0) {
             if (this.night) {
-              var inShadow = Math.hypot(x0 + x - mx, y0 + y - my) < mR;
-              a = inShadow ? .07 : .62 - .22 * (d / R);             // the crescent, and the faint dark side
+              var shade = Math.max(0, Math.min(1, (mR - Math.hypot(x0 + x - mx, y0 + y - my)) / 1.6 + .5));
+              a = rim * ((.64 - .2 * (d / R)) * (1 - shade) + .07 * shade);   // the crescent, and the faint dark side
             } else {
-              a = .6 - .3 * (d / R);                                 // the sun, densest at its centre
+              a = rim * (.62 - .28 * (d / R));                                 // the sun, densest at its centre
             }
-          } else if (!this.night && d <= R + 6) {
-            a = .1 * (1 - (d - R) / 6) * (.6 + .4 * Math.sin(t * .8 + Math.atan2(y, x) * 2));   // a faint halo, breathing slowly
+          }
+          if (!this.night && d > R - 1 && d <= R + 7) {
+            a = Math.max(a, .1 * (1 - (d - R) / 7) * (.6 + .4 * Math.sin(t * .8 + Math.atan2(y, x) * 2)));   // a faint halo, breathing slowly
           }
           if (a <= .01) continue;
           c.globalAlpha = a;
           c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH);
         }
       }
+      c.globalAlpha = 1;
+    }
+
+    // night: tiny dash glimmers scattered across the sky, each twinkling at its own pace, now and then a brief glint
+    drawStars(c, t, mx, my, mr) {
+      if (!this.stars) {
+        var self = this, top = 18, bottom = this.skyBottom + 6, tries = 0;
+        this.stars = [];
+        while (this.stars.length < 13 && tries++ < 400) {
+          var x = Math.random() * this.W, y = top + Math.random() * (bottom - top);
+          if (Math.hypot(x - mx, y - my) < mr + 18) continue;                   // not on the moon
+          if (this.stars.some(function (s) { return Math.hypot(s.x - x, s.y - y) < 34; })) continue;   // spread out
+          this.stars.push({ x: x, y: y, speed: .5 + Math.random() * .9, seed: Math.random() * 10, size: Math.random() < .3 ? 2.6 : 1.8 });
+        }
+      }
+      this.stars.forEach(function (s) {
+        var tw = .5 + .5 * Math.sin(t * s.speed + s.seed);
+        var glint = Math.pow(Math.max(0, Math.sin(t * .23 + s.seed * 3)), 40);    // rare, brief
+        c.globalAlpha = .08 + .22 * tw + .5 * glint;
+        c.fillRect(s.x - s.size / 2, s.y - .5, s.size, 1);
+        if (glint > .3) { c.globalAlpha = .4 * glint; c.fillRect(s.x - .5, s.y - s.size / 2 - .5, 1, s.size + 1); }   // a tiny cross when it glints
+      });
       c.globalAlpha = 1;
     }
 
