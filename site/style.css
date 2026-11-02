@@ -74,7 +74,8 @@ a.vis:active{transform:scale(.985)}
 .go{display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:44px;font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
 .go svg,.next svg{stroke:currentColor;transition:transform .25s ease}
 .go:active svg,.go:hover svg{transform:translate(2px,-2px)}
-.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:36px 6px 0;padding:18px 0 0;min-height:52px;
+.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:64px 6px 0;   /* a pause after the list: it reads as the page's ending */
+  padding:18px 0 0;min-height:52px;
   color:var(--fg);text-decoration:none;font-size:15px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
 .next .q{color:var(--muted)}.next .a{display:inline-flex;align-items:center;gap:8px;font-weight:500}
 .next:active{transform:scale(.985)}.next:hover svg{transform:translateX(3px)}
@@ -93,7 +94,7 @@ wadi-pattern .grid{display:block;position:absolute;left:50%;bottom:2px}
    the birds. Entering (tap, swipe up, scroll or a key) carries the name and landscape up into the top bar
    in one pre-built move while the content and the menu slide in (app.js). */
 .cover{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:0 16px calc(8vh + env(safe-area-inset-bottom, 0px));touch-action:none}
+  padding:2vh 16px env(safe-area-inset-bottom, 0px);touch-action:none}   /* the scene sits at the visual centre, closer to the pointer */
 .cover[hidden]{display:none}
 .cover-bg{position:absolute;inset:0;background:var(--bg)}
 /* the cover's sky: sun, wind and birds in dashes (site/widgets/wadi-sky.js) */
