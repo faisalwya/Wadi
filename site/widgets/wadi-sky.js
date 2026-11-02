@@ -1,7 +1,8 @@
 /* <wadi-sky></wadi-sky>
    The cover's sky, drawn in the same dash language as the landscape: five birds (two dash strokes
    each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
-   in reading direction.
+   in reading direction; and the time of day, following light/dark mode: by day a sun, by night a
+   crescent moon, both drawn as a grid of the same small dashes as the mountains, to one side of the sky.
    It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
    close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
    arriving, phone toolbars moving); birds already flying glide into the new band.
@@ -32,7 +33,7 @@
 
     disconnectedCallback() { cancelAnimationFrame(this.raf); this.raf = 0; }
 
-    readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; }
+    readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; this.night = window.matchMedia('(prefers-color-scheme: dark)').matches; }
 
     resize() {
       var r = this.getBoundingClientRect();
@@ -80,12 +81,40 @@
       this.raf = requestAnimationFrame(tick);
     }
 
+    drawSky(c, t) {
+      var CW = 4.9, RH = 3.5, DW = 3.2, DH = 1.1;                  // the cover landscape's cell and dash size, as shown
+      var R = 13, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
+      var mx = x0 + R * .55, my = y0 - R * .22, mR = R * .92;      // the shadow that carves the crescent
+      for (var y = -R - 6; y <= R + 6; y += RH) {
+        for (var x = -R - 6; x <= R + 6; x += CW) {
+          var d = Math.hypot(x, y), a = 0;
+          if (d <= R) {
+            if (this.night) {
+              var inShadow = Math.hypot(x0 + x - mx, y0 + y - my) < mR;
+              a = inShadow ? .07 : .62 - .22 * (d / R);             // the crescent, and the faint dark side
+            } else {
+              a = .6 - .3 * (d / R);                                 // the sun, densest at its centre
+            }
+          } else if (!this.night && d <= R + 6) {
+            a = .1 * (1 - (d - R) / 6) * (.6 + .4 * Math.sin(t * .8 + Math.atan2(y, x) * 2));   // a faint halo, breathing slowly
+          }
+          if (a <= .01) continue;
+          c.globalAlpha = a;
+          c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH);
+        }
+      }
+      c.globalAlpha = 1;
+    }
+
     step(t, dt) {
       var c = this.ctx, W = this.W, H = this.H, self = this;
       c.clearRect(0, 0, W, H);
       c.save();
       if (this.rtl) { c.translate(W, 0); c.scale(-1, 1); }       // everything moves in reading direction
       c.strokeStyle = this.ink; c.fillStyle = this.ink; c.lineCap = 'round';
+
+      // the sun (day) or the moon (night): a disc made of rows of dashes, like the mountains' grid
+      this.drawSky(c, t);
 
       // birds: flap in bursts, glide in between, nearer ones larger and darker
       this.birds.forEach(function (b) {
