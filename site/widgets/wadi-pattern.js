@@ -177,14 +177,14 @@
           c2.globalAlpha = on * depth * edge * shimmer;
           c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
           if (light * catchLight > .02) {                                                          // lit: redrawn in the strongest ink
-            c2.fillStyle = this.glow; c2.globalAlpha = on * edge * light * catchLight;
+            c2.fillStyle = this.glow; c2.globalAlpha = on * edge * light * catchLight * .65;   // kept soft
             c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
             c2.fillStyle = this.ink;
           }
           // its reflection on the water: mirrored, flattened, fainter with depth, rippling
           if (this.reflect && alive) {
             var below = (r + .5) * rowH * SQUASH, ripple = Math.sin(t * 1.5 + r * 1.1 + u * 9) * .9;
-            c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r)) * (1 + light * 2.2);   // the light shows in the water too
+            c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r)) * (1 + light * 1.4);   // the light shows in the water too
             c2.fillRect(x - w / 2 + ripple, HEIGHT + 1.5 + below - hgt / 2, w, hgt * .9);
           }
         }
