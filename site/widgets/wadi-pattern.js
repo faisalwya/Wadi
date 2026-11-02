@@ -14,6 +14,9 @@
    - Cover: setZoom(z) draws it sharp when the page shows it zoomed in; setHero(0) makes it "alive"
      (a slow swell rolls across the mountains and the ridgeline shimmers faintly); setHero(p) with p
      rising towards 1 calms it (gone by p = 1/3). That loop pauses when hidden.
+   - While alive, light passes over the range: every ~9 s a soft band travels across it (in reading
+     direction, ~3.5 s), catching the ridgelines most, the slopes a little and the valley floors barely,
+     and showing faintly in the reflection.
    - reflect (attribute, the cover): while alive, a faint mirrored copy of the mountains lies just below the
      ground line, flattened like a reflection on water, fading with depth, with a slow ripple running through
      it. It fades out with the calm, so it never travels into the top bar.
@@ -101,7 +104,7 @@
       return out;
     }
 
-    readInk() { this.ink = getComputedStyle(this).color || '#3F3D38'; }
+    readInk() { var cs = getComputedStyle(this); this.ink = cs.color || '#3F3D38'; this.glow = cs.getPropertyValue('--fg').trim() || this.ink; }   // glow: the strongest ink, for the passing light
 
     // canvas size in CSS px; it sits on the element's bottom edge, centred
     size(w, h) {
@@ -153,6 +156,8 @@
       var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : (rows <= 6 ? 1.3 : Math.max(.7, Math.min(1, rowH * .3)));   // the small landscape gets slightly bolder dashes
       var fade = cols * .14;
       this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
+      // the passing light: a band that sweeps across in the first 3.6 s of every 9 s
+      var sweep = alive ? (t % 9) / 3.6 : 2, lightX = -.15 + sweep * 1.3;
       c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
       for (var c = 0; c < cols; c++) {
         var h = this.h[c], u = c / cols;
@@ -165,13 +170,21 @@
           var on = Math.max(0, Math.min(1, h - r));
           if (on <= 0.01) continue;
           var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / (rows * .5)));   // brightest at the top, fading down
-          var shimmer = (alive && r === Math.floor(h - .001)) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + u * 92)) : 1;   // the ridgeline glints
+          var top = Math.floor(h - .001);
+          var shimmer = (alive && r === top) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + u * 92)) : 1;   // the ridgeline glints
+          var light = sweep <= 1 ? alive * Math.exp(-Math.pow((u - lightX) / .09, 2)) : 0;            // the passing light
+          var catchLight = r === top ? 1 : r === top - 1 ? .55 : .18;                                // ridges catch it most
           c2.globalAlpha = on * depth * edge * shimmer;
           c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+          if (light * catchLight > .02) {                                                          // lit: redrawn in the strongest ink
+            c2.fillStyle = this.glow; c2.globalAlpha = on * edge * light * catchLight;
+            c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+            c2.fillStyle = this.ink;
+          }
           // its reflection on the water: mirrored, flattened, fainter with depth, rippling
           if (this.reflect && alive) {
             var below = (r + .5) * rowH * SQUASH, ripple = Math.sin(t * 1.5 + r * 1.1 + u * 9) * .9;
-            c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r));
+            c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r)) * (1 + light * 2.2);   // the light shows in the water too
             c2.fillRect(x - w / 2 + ripple, HEIGHT + 1.5 + below - hgt / 2, w, hgt * .9);
           }
         }
