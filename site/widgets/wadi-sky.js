@@ -3,8 +3,7 @@
    each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
    in reading direction; and the time of day, following light/dark mode: by day a sun, by night a
    crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
-   round), to one side of the sky, with a glow of faint dashes around it and a light path of a few flickering
-   dashes on the water below it; at night a dozen faint dash stars
+   round), to one side of the sky, with a glow of faint dashes around it; at night a dozen faint dash stars
    twinkle, each at its own pace.
    It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
    close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
@@ -50,9 +49,6 @@
       // measure where the name and landscape rest in the layout (offsets ignore any move in progress, such as
       // the name gliding back down from the top bar when returning to the cover)
       this.cx = land ? land.offsetLeft + land.offsetWidth / 2 : this.W / 2;
-      // the water line: the cover landscape is zoomed 1.6x from its bottom edge (2px padding), its reflection hangs 14px x 1.6 below
-      this.groundY = land ? land.offsetTop + land.offsetHeight - 2 * 1.6 : this.H * .6;
-      this.waterH = 14 * 1.6;
       var oldTop = this.skyTop, oldBottom = this.skyBottom;
       var nameTop = name ? name.offsetTop : this.H * .4;
       this.skyBottom = nameTop - 20;                               // just above the name
@@ -131,28 +127,7 @@
           if (bright > .01) { c.fillStyle = this.glow; c.globalAlpha = bright; c.fillRect(x0 + x - DW / 2, y0 + y - DH / 2, DW, DH); }
         }
       }
-      this.drawPath(c, t, x0, night);
       c.fillStyle = this.ink; c.globalAlpha = 1;
-    }
-
-    // the light path: the shimmering trail the sun or moon leaves on the water, directly below it in the
-    // reflection, a few short dashes widening towards the viewer, broken up by the ripple and flickering
-    drawPath(c, t, x0, night) {
-      if (this.groundY === undefined) return;
-      var DW = 2.4, DH = .9, RH = 2.3, top = this.groundY + 2.5, rows = Math.floor((this.waterH - 2) / RH);
-      c.fillStyle = this.glow;
-      for (var k = 0; k < rows; k++) {
-        var depth = k / Math.max(1, rows - 1), y = top + k * RH;
-        var half = (night ? 2.5 : 3.5) + depth * (night ? 6 : 9);           // narrower under the moon, broader under the sun
-        var drift = Math.sin(t * 1.6 + k * 1.3) * (1 + depth * 1.6);           // the ripple shifts each row
-        var n = night ? 2 : 3;
-        for (var i = 0; i < n; i++) {
-          var x = x0 + drift + (n === 1 ? 0 : (i / (n - 1) - .5) * 2 * half) * (.6 + .4 * Math.sin(t * .9 + k + i * 2));
-          var flick = .45 + .55 * Math.max(0, Math.sin(t * 2.8 + k * 2.1 + i * 1.7));
-          c.globalAlpha = (night ? .26 : .2) * (1 - depth * .55) * flick;
-          c.fillRect(x - DW / 2, y - DH / 2, DW, DH);
-        }
-      }
     }
 
     // night: tiny dash glimmers scattered across the sky, each twinkling at its own pace, now and then a brief glint
