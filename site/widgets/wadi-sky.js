@@ -45,13 +45,14 @@
       this.canvas.style.width = this.W + 'px'; this.canvas.style.height = this.H + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       var land = this.parentNode && this.parentNode.querySelector('.cover-land'), name = this.parentNode && this.parentNode.querySelector('.cover-name');
-      var lr = land ? land.getBoundingClientRect() : null, nr = name ? name.getBoundingClientRect() : null;
-      this.cx = lr ? lr.left + lr.width / 2 - r.left : this.W / 2;
+      // measure where the name and landscape rest in the layout (offsets ignore any move in progress, such as
+      // the name gliding back down from the top bar when returning to the cover)
+      this.cx = land ? land.offsetLeft + land.offsetWidth / 2 : this.W / 2;
       var oldTop = this.skyTop, oldBottom = this.skyBottom;
-      var nameTop = nr ? nr.top - r.top : this.H * .4;
+      var nameTop = name ? name.offsetTop : this.H * .4;
       this.skyBottom = nameTop - 20;                               // just above the name
       this.skyTop = Math.max(24, nameTop - 120);
-      this.stars = null;                                           // stars are placed again for the new sky
+      if (oldTop !== this.skyTop || oldBottom !== this.skyBottom) this.stars = null;   // stars are placed again only if the sky changed
       if (!this.birds) this.setup();
       else if (oldBottom !== undefined && (oldTop !== this.skyTop || oldBottom !== this.skyBottom)) {
         var self = this, span = (oldBottom - oldTop) || 1;
