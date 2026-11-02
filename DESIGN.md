@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v56, 2 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v57, 2 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -59,7 +59,7 @@ These came from many rounds of feedback. Treat them as rules.
 - Big name; a fine dash landscape (`<wadi-pattern class="cover-land" cols="72" rows="11" reflect>`) zoomed
   1.6x and drawn sharp at that zoom; a rippling reflection below; a slow swell and ridge shimmer; a soft
   band of **light passing** over the peaks every ~9 s (kept faint on purpose).
-- Sky (`<wadi-sky>`): five birds at different depths, in a band just above the name; a **sun by day / moon by
+- Sky (`<wadi-sky>`): five birds at different depths, in a band just above the name, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
   night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night.
 - Entering (the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
   landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end.

@@ -1,7 +1,7 @@
 /* <wadi-sky></wadi-sky>
-   The cover's sky, drawn in the same dash language as the landscape: five birds (two dash strokes
-   each) at different depths, nearer ones larger and darker, flapping in bursts and gliding, crossing
-   in reading direction; and the time of day, following light/dark mode: by day a sun, by night a
+   The cover's sky, drawn in the same dash language as the landscape: five birds at different depths,
+   nearer ones larger and darker, each wing two short dashes, crossing in reading direction; they flap in
+   bursts (a quick downstroke, a slower upstroke) and ease into a glide in between; and the time of day, following light/dark mode: by day a sun, by night a
    crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
    round), to one side of the sky, with a glow of faint dashes around it; at night a dozen faint dash stars
    twinkle, each at its own pace.
@@ -152,6 +152,19 @@
       c.globalAlpha = 1;
     }
 
+    // the wing's height (1 = up, below 0 = down): in a burst, a quick downstroke (a third of each beat) and a slower,
+    // easing upstroke, about three beats a second; between bursts the wings ease into a gentle glide pose
+    wingAt(t, b) {
+      var GLIDE = .5, cycle = 4.2, burst = 1.3, p = (t + b.seed) % cycle;
+      var into = Math.min(1, p / .2), out = Math.min(1, Math.max(0, (burst - p) / .25));
+      var mix = p < burst ? Math.min(into, out) : 0;                     // ease in and out of the burst
+      if (!mix) return GLIDE;
+      var u = ((t + b.seed) * 3) % 1, w;
+      if (u < .33) { var k = u / .33; w = 1 - 1.45 * (k * k * (3 - 2 * k)); }          // down, quick
+      else { var k2 = (u - .33) / .67; w = -.45 + 1.45 * (1 - Math.pow(1 - k2, 2)); }  // up, slower, easing
+      return GLIDE + (w - GLIDE) * mix;
+    }
+
     step(t, dt) {
       var c = this.ctx, W = this.W, H = this.H, self = this;
       c.clearRect(0, 0, W, H);
@@ -168,12 +181,18 @@
         if (b.target !== undefined) { b.y0 += (b.target - b.y0) * Math.min(1, dt * 2.5); if (Math.abs(b.target - b.y0) < .3) { b.y0 = b.target; b.target = undefined; } }   // glide into a new band
         if (b.x > W + 14) { b.x = -14; b.y0 = rand(self.skyTop, self.skyBottom); b.target = undefined; }
         var y = b.y0 + 3 * Math.sin(t * .7 + b.seed);
-        var flapping = ((t + b.seed) % 4.2) < 1.3;
-        var wing = flapping ? .5 + .7 * Math.sin(t * 10 + b.seed * 3) : .55;     // a clear v, flatter on the downstroke
-        c.globalAlpha = .25 + .5 * b.depth; c.lineWidth = .8 + .5 * b.depth; c.lineJoin = 'round';
-        c.beginPath();
-        c.moveTo(b.x - b.s, y - b.s * .7 * wing); c.lineTo(b.x, y); c.lineTo(b.x + b.s, y - b.s * .7 * wing);
-        c.stroke();
+        var wing = self.wingAt(t, b);
+        c.globalAlpha = .25 + .5 * b.depth; c.lineWidth = .8 + .5 * b.depth;
+        // each wing is two short dashes with a small gap, from the body out to the tip
+        [-1, 1].forEach(function (side) {
+          var tx = b.x + side * b.s, ty = y - b.s * .75 * wing;
+          [[.08, .46], [.58, 1]].forEach(function (seg) {
+            c.beginPath();
+            c.moveTo(b.x + (tx - b.x) * seg[0], y + (ty - y) * seg[0]);
+            c.lineTo(b.x + (tx - b.x) * seg[1], y + (ty - y) * seg[1]);
+            c.stroke();
+          });
+        });
       });
       c.restore();
     }
