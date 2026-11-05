@@ -1,6 +1,6 @@
 /* Shared behaviour for every language page. */
 (function(){
-  var keys=['services','work','about','contact'];
+  var keys=['work','services','about','contact'];   // the menu's order; Work opens first
   var label=document.getElementById('label'), ind=document.getElementById('ind'), next=document.getElementById('next');
   var calm=window.matchMedia('(prefers-reduced-motion: reduce)');
   var tabs=[].slice.call(document.querySelectorAll('.tab'));
@@ -67,7 +67,7 @@
   function setupCover(){
     var wrap=document.querySelector('.wrap'), nav=document.querySelector('nav');
     var cName=cover.querySelector('.cover-name'), cLand=cover.querySelector('.cover-land'), enterBtn=cover.querySelector('.enter');
-    var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky');
+    var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky'), line=cover.querySelector('.cover-line');
     var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
     var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
     var q=new URLSearchParams(location.search).get('cover');
@@ -83,6 +83,7 @@
 
     // ways in
     enterBtn.addEventListener('click',enter);
+    cover.addEventListener('click',enter);                 // or a tap anywhere on the cover
     cover.addEventListener('wheel',function(e){ if(e.deltaY>8) enter(); },{passive:true});
     var y0=null;
     cover.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY; },{passive:true});
@@ -104,7 +105,15 @@
       state='cover';
       root.classList.add('cover-on'); cover.hidden=false; wrap.inert=true; nav.inert=true;
       customElements.whenDefined('wadi-pattern').then(function(){ cLand.setHero(0); });
-      cName.animate([{opacity:0,translate:'0 6px'},{opacity:1,translate:'0 0'}],{duration:900,delay:150,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
+      // wait (briefly) for the display font, so the name never swaps typeface while it is on show
+      cName.style.opacity='0'; line.style.opacity='0';
+      var shown=false, reveal=function(){
+        if(shown) return; shown=true; cName.style.opacity=''; line.style.opacity='';
+        cName.animate([{opacity:0,translate:'0 6px'},{opacity:1,translate:'0 0'}],{duration:900,delay:100,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
+        line.animate([{opacity:0},{opacity:1}],{duration:900,delay:700,easing:'ease',fill:'backwards'});
+      };
+      if(document.fonts&&document.fonts.ready) document.fonts.ready.then(reveal);
+      setTimeout(reveal,900);
     }
 
     // where the cover's name and landscape sit, compared with their places in the top bar
@@ -119,12 +128,13 @@
 
     function enter(){
       if(state!=='cover') return; state='moving';
-      clear([cName,cLand,bg,sky,enterBtn].concat(contentEls(),[nav]));
+      clear([cName,cLand,bg,sky,line,enterBtn].concat(contentEls(),[nav]));
       var o=offsets(), t0=performance.now();
       // the birds and the swell settle as the move begins
       (function calmDown(now){ var k=Math.min(1,(now-t0)/220); cLand.setHero(k*.34); if(k<1) requestAnimationFrame(calmDown); })(t0);
       enterBtn.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'});
       sky.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});
+      line.animate([{opacity:1},{opacity:0}],{duration:200,easing:'ease',fill:'forwards'});
       cName.animate([{transform:'none'},{transform:o.name}],{duration:D,easing:EASE,fill:'forwards'});
       cLand.animate([{transform:'scale('+ZOOM+')'},{transform:o.land}],{duration:D,easing:EASE,fill:'forwards'});
       bg.animate([{opacity:1},{opacity:0}],{duration:D*.7,delay:D*.3,easing:'ease',fill:'forwards'});
@@ -149,7 +159,7 @@
     function back(){
       if(state!=='site') return; state='moving';
       window.scrollTo(0,0);
-      clear([cName,cLand,bg,sky,enterBtn].concat(contentEls(),[nav]));
+      clear([cName,cLand,bg,sky,line,enterBtn].concat(contentEls(),[nav]));
       cover.hidden=false; root.classList.add('cover-on'); wrap.inert=true; nav.inert=true;
       var o=offsets();
       contentEls().forEach(function(el){ el.animate([{opacity:1},{opacity:0,transform:'translateY(12px)'}],{duration:260,easing:'ease',fill:'forwards'}); });
@@ -158,6 +168,7 @@
       cName.animate([{transform:o.name},{transform:'none'}],{duration:D,easing:EASE,fill:'backwards'});
       cLand.animate([{transform:o.land},{transform:'scale('+ZOOM+')'}],{duration:D,easing:EASE,fill:'backwards'});
       sky.animate([{opacity:0},{opacity:1}],{duration:420,delay:D*.7,easing:'ease',fill:'backwards'});
+      line.animate([{opacity:0},{opacity:1}],{duration:420,delay:D*.8,easing:'ease',fill:'backwards'});
       enterBtn.animate([{opacity:0},{opacity:1}],{duration:320,delay:D*.8,easing:'ease',fill:'backwards'});
       setTimeout(function(){
         state='cover';

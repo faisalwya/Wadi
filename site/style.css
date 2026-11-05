@@ -19,7 +19,8 @@
 body{margin:0;-webkit-tap-highlight-color:transparent;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;-webkit-font-smoothing:antialiased;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
 a{color:inherit}
-.wrap{max-width:560px;margin:0 auto;padding-block:0 140px}
+.wrap{max-width:560px;margin:0 auto;padding-block:0 128px;box-sizing:border-box;min-height:100vh;min-height:100svh;display:flex;flex-direction:column}
+/* the page fills the screen: the list sits at the top and the closing line rests just above the menu */
 /* Top bar: the name and the small landscape stay fixed at the top while the content scrolls beneath it.
    Nothing in it resizes with the scroll. */
 .top{position:sticky;top:0;z-index:5;margin:0 -16px;padding:0 16px 6px;background:var(--bg)}
@@ -33,7 +34,7 @@ h1{margin:0;width:fit-content;font-family:var(--display);font-weight:500;font-si
   margin-inline:auto}
 .label{margin:28px 6px 10px;font-size:13px;color:var(--muted)}
 
-.view{display:flex;flex-direction:column;gap:2px;padding:0 6px}
+.view{display:flex;flex-direction:column;gap:8px;padding:0 6px}
 .it{scroll-margin:104px 0 110px}   /* clear of the top bar and the menu */
 .view[hidden]{display:none!important}
 .it{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
@@ -64,6 +65,7 @@ a.vis:active{transform:scale(.985)}
 .vis iframe{position:absolute;top:0;left:0;width:250%;height:250%;border:0;transform:scale(.4);transform-origin:0 0;pointer-events:none;opacity:0;transition:opacity .6s ease}
 .vis iframe.ready{opacity:1}
 .vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+@media (prefers-color-scheme: dark){.vis img,.vis iframe.ready{filter:brightness(.86)}}
 
 .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;min-height:52px;text-decoration:none;color:var(--fg)}
 .ch .nm{display:block;font-family:var(--display);font-weight:400;font-size:clamp(30px,8vw,36px);line-height:1.05;letter-spacing:-.02em}
@@ -74,12 +76,13 @@ a.vis:active{transform:scale(.985)}
 .go{display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:44px;font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
 .go svg,.next svg{stroke:currentColor;transition:transform .25s ease}
 .go:active svg,.go:hover svg{transform:translate(2px,-2px)}
-.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:64px 6px 0;   /* a pause after the list: it reads as the page's ending */
+.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:auto 6px 0;   /* rests at the bottom of the screen, after at least a 64px pause */
   padding:18px 0 0;min-height:52px;
   color:var(--fg);text-decoration:none;font-size:15px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
 .next .q{color:var(--muted)}.next .a{display:inline-flex;align-items:center;gap:8px;font-weight:500}
 .next:active{transform:scale(.985)}.next:hover svg{transform:translateX(3px)}
 .next[hidden]{display:none}
+.view:not([hidden]){margin-bottom:64px}
 .go:focus-visible,.next:focus-visible{outline:2px solid var(--fg);outline-offset:4px;border-radius:8px}
 
 
@@ -100,10 +103,20 @@ wadi-pattern .grid{display:block;position:absolute;left:50%;bottom:2px}
 /* the cover's sky: sun, wind and birds in dashes (site/widgets/wadi-sky.js) */
 wadi-sky{position:absolute;inset:0;display:block;color:var(--soft);pointer-events:none}
 wadi-sky canvas{display:block}
+/* on wide screens the sky stays near the scene instead of spanning the window; birds fade in and out at its edges */
+@media (min-width:900px){
+  wadi-sky{left:calc(50% - 400px);right:auto;width:800px;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+  .wrap{min-height:0}   /* the closing line follows the list instead of resting at the bottom of a tall window */
+}
 .cover-name{position:relative;margin:0;font-family:var(--display);font-weight:500;font-size:calc(clamp(34px,6vw,44px) * 1.6);
   line-height:1;letter-spacing:-.03em;text-align:center;transform-origin:0 0}
 [lang="ar"] .cover-name{letter-spacing:0}
 wadi-pattern.cover-land{margin-top:calc(20px + 24px * .6);transform:scale(1.6);transform-origin:50% 100%}
+/* one quiet line under the scene: what the studio does, so the first screen answers "what is this?" */
+.cover-line{position:relative;margin:34px 0 0;font-size:14px;line-height:1.4;color:var(--muted);text-align:center;letter-spacing:.01em}
+[lang="ar"] .cover-line{font-size:15px;letter-spacing:0}
+.cover{cursor:pointer}   /* a tap anywhere on the cover enters */
 .enter{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom, 0px));translate:-50% 0;display:grid;place-items:center;
   width:64px;height:64px;padding:0;border:0;border-radius:50%;background:none;color:var(--soft);cursor:pointer}
 /* the pointer: two chevrons made of dash strokes that light up one after the other, pointing the way down */

@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v57, 2 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v58, 5 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -28,6 +28,8 @@ These came from many rounds of feedback. Treat them as rules.
 - Pills, containers and boxes around things (the menu's pill was removed for this reason).
 - Section lines and dividers.
 - Busy or "too dynamic" effects; anything that competes with the name.
+- (Revisited in v58) Text under the name in the top bar stays out; the cover now carries one quiet line saying what
+  the studio does, because a first-time client needs that answer on the first screen.
 - Text characters used as visuals that look like symbols rather than an image (early ribbon versions).
 - Big decorative extras: the sun as a thin dashed ring, wind lines, a trickle of falling dashes as a scroll
   cue, rain, a "light path" reflection on the water, a name that builds itself from flying dashes.
@@ -61,7 +63,9 @@ These came from many rounds of feedback. Treat them as rules.
   band of **light passing** over the peaks every ~9 s (kept faint on purpose).
 - Sky (`<wadi-sky>`): five birds at different depths, in a band just above the name, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
   night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night.
-- Entering (the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
+- Under the scene, one quiet line: "Websites, tools + interactive work · Jeddah". It fades in after the name.
+- The name waits briefly for its font, so it never swaps typeface on screen.
+- Entering (a tap anywhere, the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
   landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end.
   Tapping the name in the top bar plays it in reverse. Nothing is tied to scroll position.
 - The scene sits at the visual centre (~51% of the screen height).
@@ -74,15 +78,20 @@ where reading starts: Work = sharp peaks around a central valley; Services = rol
 broad mountain; Contact = two peaks facing each other (a conversation). The cover follows the current tab.
 
 **Lists**: big serif titles with a "+"; each shows a one-line description under it while closed; opening
-one dims the others. "Have a project in mind? Get in touch" closes each tab (not on Contact), with a 64px
-pause above it. No footer.
+one dims the others. "Have a project in mind? Get in touch" closes each tab (not on Contact). On a phone it rests
+at the bottom of the screen just above the menu (at least 64px after the list), so a short tab still reads as one
+composed screen; on wide screens it follows the list. No footer.
 
-**Menu** (`<wadi-horizon>`): no container. Labels float over a faint line of dashes (a horizon) that lifts
+**Menu** (`<wadi-horizon>`): order Work, Services, About, Contact (Work opens first, so it is also first). No container. Labels float over a faint line of dashes (a horizon) that lifts
 into a small hill under the active tab and travels on a switch. The page fades out behind the menu.
 
 **Services → Interactive + games**: a scratch-to-reveal card (`<wadi-scratch>`) as a campaign demo.
 
-**Contact**: the plain list (Email, Book a call, Jeddah local time). "Book a call" still waits for a link.
+**Contact**: the plain list (Email, Book a call, Jeddah local time). "Book a call" opens an email titled "Book a call"
+until a booking link exists.
+
+**Sharing**: favicon and home-screen icon (a valley between two peaks, in dashes), a link-preview image (`og.png`,
+the cover itself) with title and description for WhatsApp and social links, and a quiet 404 page.
 
 **Arabic** (`site/ar/`): same structure, right-to-left, everything mirrored (waves and birds move from the
 right). Project names are transliterated into Arabic script; the owner reviewed the Arabic copy.
@@ -120,4 +129,5 @@ right). Project names are transliterated into Arabic script; the owner reviewed 
 - Matching still images for the three projects instead of live app previews.
 - Type sizes: titles are larger than the name in the top bar; settle it.
 - Desktop pass (the site is still a phone column on a laptop).
-- Time of day by real Jeddah time (later); "Book a call" link; trust signals; remove `site/embed-test.html`.
+- Time of day by real Jeddah time (later); a real "Book a call" link; trust signals.
+- A fresh screenshot of The Little Theory (the current one shows its "coming soon" page).

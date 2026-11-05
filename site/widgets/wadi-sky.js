@@ -48,7 +48,7 @@
       var land = this.parentNode && this.parentNode.querySelector('.cover-land'), name = this.parentNode && this.parentNode.querySelector('.cover-name');
       // measure where the name and landscape rest in the layout (offsets ignore any move in progress, such as
       // the name gliding back down from the top bar when returning to the cover)
-      this.cx = land ? land.offsetLeft + land.offsetWidth / 2 : this.W / 2;
+      this.cx = land ? land.offsetLeft + land.offsetWidth / 2 - this.offsetLeft : this.W / 2;   // in the sky's own coordinates (it may be narrower than the cover)
       var oldTop = this.skyTop, oldBottom = this.skyBottom;
       var nameTop = name ? name.offsetTop : this.H * .4;
       this.skyBottom = nameTop - 20;                               // just above the name
