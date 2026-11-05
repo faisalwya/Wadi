@@ -4,7 +4,7 @@
   var label=document.getElementById('label'), ind=document.getElementById('ind'), next=document.getElementById('next');
   var calm=window.matchMedia('(prefers-reduced-motion: reduce)');
   var tabs=[].slice.call(document.querySelectorAll('.tab'));
-  var rtl=document.documentElement.dir==='rtl', started=false;
+  var rtl=document.documentElement.dir==='rtl', started=false, current=null;
 
   function clearSel(view){
     view.classList.remove('has-sel');
@@ -12,12 +12,17 @@
   }
   function show(key){
     if(keys.indexOf(key)<0) key='work';
+    // on a tab change the list slides in from the side you travelled towards; on load it rises
+    var dir=(current&&current!==key)?(keys.indexOf(key)>keys.indexOf(current)?1:-1):0;
+    current=key;
     keys.forEach(function(k){
       var v=document.getElementById('v-'+k);
       if(k===key){
         clearSel(v);
         v.hidden=false;
-        v.querySelectorAll('.it').forEach(function(it){it.style.animation='none';void it.offsetWidth;it.style.animation='';});
+        v.style.setProperty('--dx',dir?(dir*(rtl?-1:1)*28)+'px':'0px');
+        v.style.setProperty('--dy',dir?'0px':'10px');
+        v.querySelectorAll('.it,.group').forEach(function(it){it.style.animation='none';void it.offsetWidth;it.style.animation='';});
         label.textContent=v.dataset.label;
       } else v.hidden=true;
     });
@@ -27,11 +32,50 @@
     if(started) document.dispatchEvent(new CustomEvent('wadi:tab',{detail:key}));  // lets widgets react to tab changes
     started=true;
   }
-  tabs.forEach(function(t){t.addEventListener('click',function(){
-    var k=t.dataset.tab;
+  function go(k){
     if(location.hash!=='#'+k){try{history.replaceState(null,'','#'+k);}catch(e){} }
-    show(k); window.scrollTo({top:0,behavior:'smooth'});
-  });});
+    show(k); window.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){ go(t.dataset.tab); });});
+
+  // swipe sideways on the page to move to the next or previous tab, as in an app. Ignored near the screen's
+  // edges (the phone's own back gesture), on the scratch card, previews and the form, and for slow or
+  // mostly vertical moves.
+  var page=document.querySelector('.wrap'), sx=null, sy=0, st=0;
+  page.addEventListener('touchstart',function(e){
+    var p=e.touches[0]; sx=null;
+    if(e.touches.length>1||document.documentElement.classList.contains('cover-on')) return;
+    if(e.target.closest('wadi-scratch,textarea,input,.vis,.opts')) return;
+    if(p.clientX<24||p.clientX>window.innerWidth-24) return;
+    sx=p.clientX; sy=p.clientY; st=Date.now();
+  },{passive:true});
+  page.addEventListener('touchend',function(e){
+    if(sx===null) return;
+    var p=e.changedTouches[0], dx=p.clientX-sx, dy=p.clientY-sy; sx=null;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-st>700) return;
+    var i=keys.indexOf(current)+(dx<0?1:-1)*(rtl?-1:1);
+    if(i>=0&&i<keys.length) go(keys[i]);
+  },{passive:true});
+
+  // the project brief: choices toggle (one or several), and sending opens an email with the brief filled in
+  document.querySelectorAll('.opts').forEach(function(g){
+    g.addEventListener('click',function(e){
+      var b=e.target.closest('.opt'); if(!b) return;
+      var on=b.getAttribute('aria-pressed')!=='true';
+      if(!g.hasAttribute('data-multi')) g.querySelectorAll('.opt').forEach(function(o){o.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed',on?'true':'false');
+    });
+  });
+  document.querySelectorAll('form.brief').forEach(function(f){
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var ar=document.documentElement.lang==='ar', q=f.querySelectorAll('.q');
+      var pick=function(n){ return [].map.call(f.querySelectorAll('.opts[data-name="'+n+'"] .opt[aria-pressed="true"]'),function(o){return o.textContent;}).join(ar?'، ':', ')||'–'; };
+      var lines=[q[0].textContent+' '+pick('need'), q[1].textContent+' '+pick('when'), '', f.querySelector('textarea').value.trim()];
+      f.classList.add('sent');
+      location.href='mailto:hello@wadi.studio?subject='+encodeURIComponent(ar?'طلب مشروع':'Project brief')+'&body='+encodeURIComponent(lines.join('\n'));
+    });
+  });
 
   document.querySelectorAll('.view').forEach(function(view){
     view.querySelectorAll('.it .t').forEach(function(btn){
