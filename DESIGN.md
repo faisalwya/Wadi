@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v62, 15 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v63, 15 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -51,7 +51,8 @@ These came from many rounds of feedback. Treat them as rules.
   for headings, IBM Plex Sans Arabic for text. Arabic never uses negative letter-spacing (it breaks joined letters).
 - **Dashes are drawn on canvas as tiny lines, never as text characters**, so they look the same on every
   device and font (a lesson from iPhone Safari).
-- Layout: one column, max 560px, 16px side gutters; nothing scrolls sideways.
+- Layout: one column, max 560px, 16px side gutters; the lists sit a little further in (28px from the screen edge on a
+  phone, v63); nothing scrolls sideways.
 
 ## The pieces and the decisions behind them
 
@@ -79,7 +80,10 @@ landscape (`<wadi-pattern>`, 40 x 6, drawn in full ink with slightly bolder dash
 where reading starts: Work = sharp peaks around a central valley; Services = rolling dunes; About = one
 broad mountain; Contact = two peaks facing each other (a conversation). The cover follows the current tab.
 
-**Lists**: big serif titles with a "+"; each shows a one-line description under it while closed (a tap on that line
+**Lists**: serif titles with a fine "+". Since v63 the titles are a step below the studio name (about 28px on a phone,
+the name is 34px), with generous room between rows: at the old size (about 34px) a list read as a wall of headlines and
+the phone felt crowded. There is no small label above a list (the menu already names the tab; each section keeps its
+name for screen readers). Each title shows a one-line description under it while closed (a tap on that line
 opens the item too, v61); opening one dims the others. "Have a project in mind? Get in touch" closes each tab (not on Contact). On a phone it rests
 at the bottom of the screen just above the menu (at least 64px after the list), so a short tab still reads as one
 composed screen; on wide screens it follows the list. No footer.
@@ -89,7 +93,8 @@ Nights, Invoice Helper) and use `<wadi-plate>` stand-in images (a tinted card wi
 place). Opened projects show a body, a row of facts (Role, Built with; the year is only in the line under the title, v62) and a link. Links ("Visit the store", "Send the
 brief") carry a fine dashed underline close under the words, in the muted colour: the quieter cousin of a picked choice's
 underline. A line at the bottom of the tap area read as a divider and was removed (v61). Services has four services
-(each with an "includes" dash list and a typical timeline), then a second list, Questions, with smaller titles. About
+(each with an "includes" dash list and a typical timeline), then a second list, Questions, with smaller titles and no one-liners (the
+question says it; the answer opens in place, v63). About
 adds numbered steps under Approach and a Principles list. Contact starts with "Start a project": choices are words in ink that
 gain a dashed underline when picked (no boxes or pills; they are not grey, because grey means dimmed elsewhere, v61), a short note written on a line of dashes (no box; it starts as one line, grows as you write, and the dashes turn to ink
 while you type, v62), and Send opens an email with the brief filled in. Then
@@ -153,7 +158,6 @@ right). Project names are transliterated into Arabic script; the owner reviewed 
 - Cover, one component at a time: the birds (more natural flight; one perching on a peak), the name (a slow
   glint), the pointer (breathing with the landscape), the background (a soft gradient of light).
 - Matching still images for the three projects instead of live app previews.
-- Type sizes: titles are larger than the name in the top bar; settle it.
 - Desktop pass (the site is still a phone column on a laptop).
 - Time of day by real Jeddah time (later); a real "Book a call" link; trust signals.
 - A fresh screenshot of The Little Theory (the current one shows its "coming soon" page).

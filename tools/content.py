@@ -7,7 +7,9 @@ ARROW16 = '<svg class="arrow" aria-hidden="true" width="16" height="16" viewBox=
 MAIL = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M2.5 5l6.5 5 6.5-5"/></svg>'
 
 def item(title, sub, inner, cls='it'):
-    return (f'    <article class="{cls}"><button class="t" type="button" aria-expanded="false">{title}</button><p class="sub">{sub}</p>\n'
+    # sub=None leaves out the one-liner under the title (used for Questions: the question says it, the answer opens in place)
+    line = f'<p class="sub">{sub}</p>' if sub else ''
+    return (f'    <article class="{cls}"><button class="t" type="button" aria-expanded="false">{title}</button>{line}\n'
             f'      <div class="panel"><div><div class="in">\n{inner}\n      </div></div></div></article>')
 
 def body(t): return f'        <p class="body">{t}</p>'
@@ -207,7 +209,7 @@ def build(d, lang):
     ltr = ' dir="ltr"' if lang == 'ar' else ''
     work = '\n'.join(item(t, s, parts(p)) for t, s, p in d['work'])
     services = '\n'.join(item(t, s, parts(p)) for t, s, p in d['services'])
-    services += '\n' + group(d['questions_label']) + '\n' + '\n'.join(item(q, s, body(a), 'it qa') for q, s, a in d['questions'])
+    services += '\n' + group(d['questions_label']) + '\n' + '\n'.join(item(q, None, body(a), 'it qa') for q, s, a in d['questions'])
     about = '\n'.join(item(t, s, parts(p)) for t, s, p in d['about'])
     b = d['brief']
     form = (f'        <form class="brief" novalidate>\n'

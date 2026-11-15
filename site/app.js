@@ -1,7 +1,7 @@
 /* Shared behaviour for every language page. */
 (function(){
   var keys=['work','services','about','contact'];   // the menu's order; Work opens first
-  var label=document.getElementById('label'), ind=document.getElementById('ind'), next=document.getElementById('next');
+  var ind=document.getElementById('ind'), next=document.getElementById('next');
   var calm=window.matchMedia('(prefers-reduced-motion: reduce)');
   var tabs=[].slice.call(document.querySelectorAll('.tab'));
   var rtl=document.documentElement.dir==='rtl', started=false, current=null;
@@ -23,7 +23,6 @@
         v.style.setProperty('--dx',dir?(dir*(rtl?-1:1)*28)+'px':'0px');
         v.style.setProperty('--dy',dir?'0px':'10px');
         v.querySelectorAll('.it,.group').forEach(function(it){it.style.animation='none';void it.offsetWidth;it.style.animation='';});
-        label.textContent=v.dataset.label;
       } else v.hidden=true;
     });
     tabs.forEach(function(t){t.setAttribute('aria-pressed', t.dataset.tab===key?'true':'false');});
