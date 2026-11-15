@@ -63,7 +63,7 @@ h1{margin:0;width:fit-content;font-family:var(--display);font-weight:500;font-si
 .it.on .panel{grid-template-rows:1fr}
 .panel>div{overflow:hidden;min-height:0}
 .in{padding:12px 0 22px}
-.sub{margin:-4px 0 6px;font-size:13px;color:var(--muted);transition:opacity .4s ease}   /* the one-liner under each title, shown while closed */
+.sub{margin:-4px 0 6px;font-size:14px;color:var(--muted);transition:opacity .4s ease}   /* the one-liner under each title, shown while closed */
 .it>.sub{cursor:pointer}   /* a tap on it opens the item, like the title (app.js) */
 .body{margin:0;font-size:15.5px;line-height:1.6;color:var(--soft);max-width:36ch}
 .vis{display:block;aspect-ratio:16/10;max-width:100%;border-radius:16px;margin-bottom:14px;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
@@ -76,8 +76,8 @@ a.vis:active{transform:scale(.985)}
 
 .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;min-height:52px;text-decoration:none;color:var(--fg)}
 .ch .nm{display:block;font-family:var(--display);font-weight:400;font-size:clamp(30px,8vw,36px);line-height:1.05;letter-spacing:-.02em}
-.ch .hd{display:block;margin-top:4px;font-size:13px;color:var(--muted);user-select:all}
-.ch svg{flex:none;margin-top:12px;stroke:var(--muted);transition:transform .25s ease}
+.ch .hd{display:block;margin-top:4px;font-size:14px;color:var(--muted);user-select:all}
+.ch svg{flex:none;margin-top:12px;margin-inline-end:3px;stroke:var(--muted);transition:transform .25s ease}
 .ch:hover svg{transform:translate(2px,-2px)}
 .where{margin:20px 0 0;font-size:13px;color:var(--muted)}
 .go{position:relative;display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:44px;font-size:14px;line-height:1.3;font-weight:500;color:var(--fg);text-decoration:none}
@@ -139,10 +139,13 @@ wadi-plate canvas{display:block}
 .opt[aria-pressed="true"]::after{opacity:1;transform:none}
 @media (hover:hover){.opt:hover{color:var(--fg)}}
 .opt:focus-visible{outline:2px solid var(--fg);outline-offset:2px;border-radius:6px}
-.brief textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px 14px;min-height:92px;resize:none;
-  font:inherit;font-size:16px;line-height:1.5;color:var(--fg);background:var(--line);border:0;border-radius:12px;outline:none;transition:box-shadow .2s ease}
-.brief textarea::placeholder{color:var(--muted);opacity:.8}
-.brief textarea:focus-visible{box-shadow:inset 0 0 0 1.5px var(--muted)}
+/* the note is written on a line of dashes (no box): one line to start, growing as you write (app.js); the dashes turn to ink while you type */
+.brief textarea{display:block;width:100%;box-sizing:border-box;margin:0;padding:8px 0 9px;min-height:44px;resize:none;overflow:hidden;field-sizing:content;
+  font:inherit;font-size:16px;line-height:1.5;color:var(--fg);background:none;border:0;border-radius:0;outline:none;
+  border-bottom:1.5px solid transparent;border-image:repeating-linear-gradient(90deg,var(--dashc,var(--muted)) 0 5px,transparent 5px 8px) 1}
+[dir="rtl"] .brief textarea{border-image:repeating-linear-gradient(270deg,var(--dashc,var(--muted)) 0 5px,transparent 5px 8px) 1}
+.brief textarea::placeholder{color:var(--muted);opacity:1}
+.brief textarea:focus{--dashc:var(--fg)}
 button.go{padding:0;background:none;border:0;font-family:inherit;cursor:pointer;margin-top:18px}
 .brief .send{font-size:16px;margin-top:20px}
 .brief .send::after{inset-inline-end:22px;top:calc(50% + 13px)}   /* its words and arrow are a little larger */
@@ -183,6 +186,8 @@ wadi-pattern.cover-land{margin-top:calc(20px + 24px * .6);transform:scale(1.6);t
 .cover-line{position:relative;margin:34px 0 0;font-size:14px;line-height:1.4;color:var(--muted);text-align:center;letter-spacing:.01em}
 [lang="ar"] .cover-line{font-size:15px;letter-spacing:0}
 .cover{cursor:pointer}   /* a tap anywhere on the cover enters */
+/* the language switch is on the cover too, exactly where the top bar's sits, so it does not move when you enter */
+.cover-lang{inset-inline-end:max(16px, env(safe-area-inset-right, 0px), calc(50% - 280px))}
 .enter{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom, 0px));translate:-50% 0;display:grid;place-items:center;
   width:64px;height:64px;padding:0;border:0;border-radius:50%;background:none;color:var(--soft);cursor:pointer}
 /* the pointer: two chevrons made of dash strokes that light up one after the other, pointing the way down */

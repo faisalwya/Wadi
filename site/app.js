@@ -66,6 +66,11 @@
       b.setAttribute('aria-pressed',on?'true':'false');
     });
   });
+  // the note field starts as one line and grows with what is written
+  document.querySelectorAll('.brief textarea').forEach(function(t){
+    var fit=function(){ t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; };
+    t.addEventListener('input',fit);
+  });
   document.querySelectorAll('form.brief').forEach(function(f){
     f.addEventListener('submit',function(e){
       e.preventDefault();
@@ -131,12 +136,16 @@
 
     // ways in
     enterBtn.addEventListener('click',enter);
-    cover.addEventListener('click',enter);                 // or a tap anywhere on the cover
+    var cLang=cover.querySelector('.lang');
+    cover.addEventListener('click',function(e){ if(cLang&&cLang.contains(e.target)) return; enter(); });   // or a tap anywhere on the cover (except the language switch)
+    // switching language from the cover opens the other language's cover
+    if(cLang) cLang.addEventListener('click',function(){ try{sessionStorage.removeItem('wadi-cover');}catch(e){} });
     cover.addEventListener('wheel',function(e){ if(e.deltaY>8) enter(); },{passive:true});
     var y0=null;
     cover.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY; },{passive:true});
     cover.addEventListener('touchmove',function(e){ if(y0!==null&&y0-e.touches[0].clientY>28){ y0=null; enter(); } },{passive:true});
     document.addEventListener('keydown',function(e){
+      if(cLang&&cLang.contains(e.target)) return;          // Enter on the language switch follows the link
       if(state==='cover'&&['ArrowDown','PageDown',' ','Enter'].indexOf(e.key)>-1){ if(e.target!==enterBtn) e.preventDefault(); enter(); }
     });
 
