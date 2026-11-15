@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v64, 15 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v65, 15 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -36,6 +36,8 @@ These came from many rounds of feedback. Treat them as rules.
 - An outlined "Enter" pill; buttons that look like buttons where a quiet symbol would do.
 - A copy button and card on the email; extra sections on Contact (it was reverted to the plain list).
 - Scroll-linked resizing (felt choppy on iPhone; replaced by the cover).
+- (Tested in mockups and dropped, v65) Two-tone dash landscapes (a dark ridge line over a lighter body: spotty, like a bar
+  chart with caps); bird wings drawn as separate flat dashes (at phone size they stop reading as birds).
 
 **How the owner likes to work**
 - Options with a clear recommendation, in plain language. Visual choices as side-by-side mockups.
@@ -59,25 +61,30 @@ These came from many rounds of feedback. Treat them as rules.
 **Cover** (`#cover` in both pages; controller in `site/app.js`)
 - Shows once per browser session; skipped on links to a specific tab (`#contact`) and with reduce motion.
   `?cover=on` / `?cover=off` force it for testing.
-- Big name; a fine dash landscape (`<wadi-pattern class="cover-land" cols="72" rows="11" reflect>`) zoomed
-  1.6x and drawn sharp at that zoom; a rippling reflection below; a slow swell and ridge shimmer; a soft
+- Big name; a fine dash landscape (`<wadi-pattern class="cover-land" cols="72" rows="16" h="36" reflect>`) zoomed
+  1.6x and drawn sharp at that zoom. Since v65 it is half as tall again as the top bar's (36px before the zoom) and the
+  Work shape has a flat-floored valley, so it reads as two mountains with a valley between them (the wadi) rather than a
+  low strip. It keeps its soft fade down each column, which gives the mountains depth at this size; a rippling reflection below; a slow swell and ridge shimmer; a soft
   band of **light passing** over the peaks every ~9 s (kept faint on purpose).
-- Sky (`<wadi-sky>`): five birds at different depths, in a band just above the name, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
+- Sky (`<wadi-sky>`): three birds at different depths (five felt busy, v65), in a band just above the name, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
   night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night.
 - Under the scene, one quiet line: "Websites, tools + interactive work · Jeddah". It fades in after the name.
 - The language switch is on the cover too (v62), in exactly the spot the top bar's occupies, so it does not move on
   entering. Switching language from the cover opens the other language's cover. A tap on it does not enter the site.
 - The name waits briefly for its font, so it never swaps typeface on screen.
 - Entering (a tap anywhere, the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
-  landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end.
+  landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end (the cover's
+  taller range settles to the top bar's height as it arrives).
   Tapping the name in the top bar plays it in reverse. Nothing is tied to scroll position.
 - The scene sits at the visual centre (~51% of the screen height).
 
 **Top bar** (`.top`): fixed, holds the name (a button back to the cover, inside the `h1`) and the small
-landscape (`<wadi-pattern>`, 40 x 6, drawn in full ink with slightly bolder dashes so its shape reads).
+landscape (`<wadi-pattern>`, 40 x 6, drawn in full ink with slightly bolder dashes so its shape reads). Since v65 every
+dash in it is the same ink and whole (its columns rest on whole rows; only the ends fade out): the old fade down each
+column looked patchy at this size.
 
 **Tab landscapes**: each tab has its own shape and the dashes spring into it on a switch, in a wave from
-where reading starts: Work = sharp peaks around a central valley; Services = rolling dunes; About = one
+where reading starts: Work = sharp peaks either side of a flat-floored valley; Services = rolling dunes; About = one
 broad mountain; Contact = two peaks facing each other (a conversation). The cover follows the current tab.
 
 **Lists**: serif titles with a fine "+". Since v63 the titles are a step below the studio name (about 28px on a phone,

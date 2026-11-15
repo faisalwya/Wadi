@@ -122,6 +122,7 @@
     var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky'), line=cover.querySelector('.cover-line');
     var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
     var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
+    var SQUASH=24/(parseInt(cLand.getAttribute('h'),10)||24);   // the cover's range is taller than the top bar's: it settles to the same height as it arrives
     var q=new URLSearchParams(location.search).get('cover');
     var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
     customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); });
@@ -179,7 +180,7 @@
       var s=b.width/a.width;
       return { s:s,
         name:'translate('+((b.left+b.width/2)-(a.left+a.width*s/2))+'px,'+((b.top+b.height/2)-(a.top+a.height*s/2))+'px) scale('+s+')',   // centre onto centre
-        land:'translate('+((lb.left+lb.width/2)-(la.left+la.width/2))+'px,'+(lb.bottom-la.bottom)+'px) scale(1)' };                     // bottom centre onto bottom centre
+        land:'translate('+((lb.left+lb.width/2)-(la.left+la.width/2))+'px,'+(lb.bottom-la.bottom)+'px) scale(1,'+SQUASH+')' };                     // bottom centre onto bottom centre
     }
 
     function enter(){

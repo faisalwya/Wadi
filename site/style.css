@@ -182,7 +182,8 @@ wadi-sky canvas{display:block}
 .cover-name{position:relative;margin:0;font-family:var(--display);font-weight:500;font-size:calc(clamp(34px,6vw,44px) * 1.6);
   line-height:1;letter-spacing:-.03em;text-align:center;transform-origin:0 0}
 [lang="ar"] .cover-name{letter-spacing:0}
-wadi-pattern.cover-land{margin-top:calc(20px + 24px * .6);transform:scale(1.6);transform-origin:50% 100%}
+/* the cover's range is taller than the top bar's (36px before the zoom), so the mountains and the valley between them read as a scene */
+wadi-pattern.cover-land{height:36px;margin-top:calc(20px + 36px * .6);transform:scale(1.6);transform-origin:50% 100%}
 /* one quiet line under the scene: what the studio does, so the first screen answers "what is this?" */
 .cover-line{position:relative;margin:34px 0 0;font-size:14px;line-height:1.4;color:var(--muted);text-align:center;letter-spacing:.01em}
 [lang="ar"] .cover-line{font-size:15px;letter-spacing:0}

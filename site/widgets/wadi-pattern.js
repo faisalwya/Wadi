@@ -1,10 +1,12 @@
-/* <wadi-pattern glyph="dash|bar" cols="40" rows="6"></wadi-pattern>
+/* <wadi-pattern glyph="dash|bar" cols="40" rows="6" h="24"></wadi-pattern>
    A slim digital landscape under the studio name: a grid of identical symbols, like a small LED
    display. Each column is a stack that rises to the landscape's height, so the mountains appear as
-   a silhouette made of uniform pieces; the top of each column is brightest and the stack fades
-   downwards, and the ends fade out. It is always 220 x 24 px; cols/rows set how fine the grid is
-   (the cover uses a finer one).
-   - A landscape for each tab (Work: peaks, Services: rolling dunes, About: one broad mountain,
+   a silhouette made of uniform pieces, and the ends fade out. It is always 220 px wide and 24 px tall
+   unless h says otherwise; cols/rows set how fine the grid is (the cover uses a finer, taller one).
+   - The small one (6 rows or fewer, the top bar) is drawn in one even ink with whole dashes only: its
+     columns rest on whole rows, so every piece looks the same. The finer one (the cover) keeps a soft
+     fade down each column, brightest at the top, which gives the mountains depth at that size.
+   - A landscape for each tab (Work: peaks either side of a flat-floored valley, the wadi; Services: rolling dunes, About: one broad mountain,
      Contact: two peaks facing each other across the valley). On a tab switch the columns rise and fall to the
      new shape in a wave from where reading starts, with a little spring; the top symbol of each
      column fades in and out so heights glide rather than jump.
@@ -26,13 +28,13 @@
   if (customElements.get('wadi-pattern')) return;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var WIDTH = 220, HEIGHT = 24;                  // always this size (px)
+  var WIDTH = 220, HEIGHT = 24;                  // its width, and its height unless the h attribute says otherwise (px)
   var REFL = 14, SQUASH = .55;                   // the reflection's depth below the ground line (px) and flattening
   var K = 150, C = 15, LINK = 110;               // spring stiffness, damping, link to neighbours
 
   var LANDS = {
-    work: { smooth: false, pts: [[0, .05], [.07, .16], [.12, .1], [.2, .44], [.26, .28], [.33, .62], [.4, .36], [.445, .8],
-      [.5, .04], [.565, .96], [.63, .42], [.7, .6], [.78, .26], [.86, .38], [.93, .12], [1, .05]] },
+    work: { smooth: false, pts: [[0, .05], [.07, .16], [.12, .1], [.2, .44], [.26, .28], [.33, .62], [.4, .36], [.44, .8],
+      [.478, .05], [.522, .05], [.565, .96], [.63, .42], [.7, .6], [.78, .26], [.86, .38], [.93, .12], [1, .05]] },
     services: { smooth: true, pts: [[0, .06], [.12, .34], [.25, .12], [.38, .6], [.5, .18], [.62, .66], [.75, .16], [.88, .38], [1, .06]] },
     about: { smooth: false, pts: [[0, .04], [.16, .12], [.3, .34], [.4, .6], [.46, .74], [.5, 1], [.555, .78], [.6, .66], [.7, .38],
       [.84, .14], [1, .04]] },
@@ -61,7 +63,9 @@
       this.glyph = (q || this.getAttribute('glyph') || 'dash') === 'dash' ? '-' : '|';
       this.cols = parseInt(this.getAttribute('cols'), 10) || 40;
       this.rows = parseInt(this.getAttribute('rows'), 10) || 6;
-      this.cellW = WIDTH / this.cols; this.rowH = HEIGHT / this.rows;
+      this.H = parseInt(this.getAttribute('h'), 10) || HEIGHT;
+      this.small = this.rows <= 6;                 // the top bar's: bolder dashes, one even ink, whole dashes at rest
+      this.cellW = WIDTH / this.cols; this.rowH = this.H / this.rows;
       this.reflect = this.hasAttribute('reflect');
       this.box = document.createElement('canvas'); this.box.className = 'grid';
       if (this.reflect) this.box.style.bottom = (2 - REFL) + 'px';   // the landscape stays put; the water hangs below
@@ -69,7 +73,7 @@
       this.ctx = this.box.getContext('2d');
       this.view = { mode: null, p: 1 };
       this.append(this.box);
-      this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
+      this.size(WIDTH, this.H + (this.reflect ? REFL : 0));
       this.readInk();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); self.draw(); });
 
@@ -100,7 +104,10 @@
     // column heights in rows (0..rows) for a landscape; never quite empty, so a ground line remains
     heights(key) {
       var out = [], base = this.rows * .12;
-      for (var c = 0; c < this.cols; c++) out.push(base + heightAt(LANDS[key], (c + .5) / this.cols) * (this.rows - base));
+      for (var c = 0; c < this.cols; c++) {
+        var v = base + heightAt(LANDS[key], (c + .5) / this.cols) * (this.rows - base);
+        out.push(this.small ? Math.max(1, Math.round(v)) : v);   // the small one rests on whole rows, so no dash is left half lit
+      }
       return out;
     }
 
@@ -151,11 +158,11 @@
 
     // light the cells: full below the column's height, the top one partly, so heights glide
     draw() {
-      var c2 = this.ctx, cols = this.cols, rows = this.rows, cellW = this.cellW, rowH = this.rowH;
+      var c2 = this.ctx, cols = this.cols, rows = this.rows, cellW = this.cellW, rowH = this.rowH, H = this.H, small = this.small;
       var alive = this.aliveness(), t = this.aliveT || 0, bar = this.glyph === '|';
-      var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : (rows <= 6 ? 1.3 : Math.max(.7, Math.min(1, rowH * .3)));   // the small landscape gets slightly bolder dashes
+      var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : (small ? 1.3 : Math.max(.7, Math.min(1, rowH * .3)));   // the small landscape gets slightly bolder dashes
       var fade = cols * .14;
-      this.size(WIDTH, HEIGHT + (this.reflect ? REFL : 0));
+      this.size(WIDTH, this.H + (this.reflect ? REFL : 0));
       // the passing light: a band that sweeps across in the first 3.6 s of every 9 s
       var sweep = alive ? (t % 9) / 3.6 : 2, lightX = -.15 + sweep * 1.3;
       c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;
@@ -169,23 +176,23 @@
         for (var r = 0; r < rows; r++) {
           var on = Math.max(0, Math.min(1, h - r));
           if (on <= 0.01) continue;
-          var depth = 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / (rows * .5)));   // brightest at the top, fading down
+          var depth = small ? 1 : 1 - 0.55 * Math.max(0, Math.min(1, (h - 1 - r) / (rows * .5)));   // the small one: one even ink; the fine one: brightest at the top, fading down
           var top = Math.floor(h - .001);
           var shimmer = (alive && r === top) ? 1 - alive * .3 * (.5 + .5 * Math.sin(t * 2.1 + u * 92)) : 1;   // the ridgeline glints
           var light = sweep <= 1 ? alive * Math.exp(-Math.pow((u - lightX) / .09, 2)) : 0;            // the passing light
           var catchLight = r === top ? 1 : r === top - 1 ? .55 : .18;                                // ridges catch it most
           c2.globalAlpha = on * depth * edge * shimmer;
-          c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+          c2.fillRect(x - w / 2, H - (r + .5) * rowH - hgt / 2, w, hgt);
           if (light * catchLight > .02) {                                                          // lit: redrawn in the strongest ink
             c2.fillStyle = this.glow; c2.globalAlpha = on * edge * light * catchLight * .65;   // kept soft
-            c2.fillRect(x - w / 2, HEIGHT - (r + .5) * rowH - hgt / 2, w, hgt);
+            c2.fillRect(x - w / 2, H - (r + .5) * rowH - hgt / 2, w, hgt);
             c2.fillStyle = this.ink;
           }
           // its reflection on the water: mirrored, flattened, fainter with depth, rippling
           if (this.reflect && alive) {
             var below = (r + .5) * rowH * SQUASH, ripple = Math.sin(t * 1.5 + r * 1.1 + u * 9) * .9;
             c2.globalAlpha = on * edge * alive * .2 * (1 - r / rows) * (.8 + .2 * Math.sin(t * 2.3 + c * .7 + r)) * (1 + light * 1.4);   // the light shows in the water too
-            c2.fillRect(x - w / 2 + ripple, HEIGHT + 1.5 + below - hgt / 2, w, hgt * .9);
+            c2.fillRect(x - w / 2 + ripple, H + 1.5 + below - hgt / 2, w, hgt * .9);
           }
         }
       }

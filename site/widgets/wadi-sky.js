@@ -1,5 +1,5 @@
 /* <wadi-sky></wadi-sky>
-   The cover's sky, drawn in the same dash language as the landscape: five birds at different depths,
+   The cover's sky, drawn in the same dash language as the landscape: three birds at different depths (five felt busy),
    nearer ones larger and darker, each wing two short dashes, crossing in reading direction; they flap in
    bursts (a quick downstroke, a slower upstroke) and ease into a glide in between; and the time of day, following light/dark mode: by day a sun, by night a
    crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
@@ -66,8 +66,8 @@
 
     setup() {
       var self = this;
-      this.birds = [0, 1, 2, 3, 4].map(function (i) {
-        var depth = [1, .75, .55, .9, .45][i];                     // 1 = near
+      this.birds = [0, 1, 2].map(function (i) {
+        var depth = [1, .7, .45][i];                               // 1 = near
         return { x: rand(0, self.W), y0: rand(self.skyTop, self.skyBottom), depth: depth, vx: 10 + 16 * depth,
                  s: 2.6 + 3.4 * depth, seed: rand(0, 10) };
       });
