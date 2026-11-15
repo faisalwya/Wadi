@@ -58,7 +58,8 @@ h1{margin:0;width:fit-content;font-family:var(--display);font-weight:500;font-si
 @media (hover:hover){.view .t:hover{opacity:1}}
 .t:active{transform:scale(.985)}
 .t:focus-visible,.tab:focus-visible,.vis:focus-visible,.ch:focus-visible{outline:2px solid var(--fg);outline-offset:4px;border-radius:8px}
-.view.has-sel .it:not(.on) .t,.view.has-sel .it:not(.on) .sub{opacity:.32}
+.view.has-sel .it:not(.on) .t{opacity:.32}
+.view.has-sel .it:not(.on) .sub{opacity:0}   /* while one item is open the others show their title only (the line keeps its room, so nothing jumps) */
 .panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.2,.7,.2,1)}
 .it.on .panel{grid-template-rows:1fr}
 .panel>div{overflow:hidden;min-height:0}

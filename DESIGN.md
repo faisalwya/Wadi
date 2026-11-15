@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v63, 15 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v64, 15 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -84,7 +84,8 @@ broad mountain; Contact = two peaks facing each other (a conversation). The cove
 the name is 34px), with generous room between rows: at the old size (about 34px) a list read as a wall of headlines and
 the phone felt crowded. There is no small label above a list (the menu already names the tab; each section keeps its
 name for screen readers). Each title shows a one-line description under it while closed (a tap on that line
-opens the item too, v61); opening one dims the others. "Have a project in mind? Get in touch" closes each tab (not on Contact). On a phone it rests
+opens the item too, v61); opening one dims the other titles and hides their one-liners (v64), so the open item has
+less around it. "Have a project in mind? Get in touch" closes each tab (not on Contact). On a phone it rests
 at the bottom of the screen just above the menu (at least 64px after the list), so a short tab still reads as one
 composed screen; on wide screens it follows the list. No footer.
 
