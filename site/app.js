@@ -78,6 +78,10 @@
   });
 
   document.querySelectorAll('.view').forEach(function(view){
+    // the one-liner under a title is part of the same tap target: a tap on it opens (or closes) the item
+    view.querySelectorAll('.it > .sub').forEach(function(sub){
+      sub.addEventListener('click',function(){ var b=sub.parentNode.querySelector('.t'); if(b) b.click(); });
+    });
     view.querySelectorAll('.it .t').forEach(function(btn){
       btn.addEventListener('click',function(){
         var it=btn.closest('.it'), was=it.classList.contains('on');
