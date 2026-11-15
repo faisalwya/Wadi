@@ -32,6 +32,7 @@
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readColors(); self.draw(); });
 
       new ResizeObserver(function () { self.resize(); }).observe(this);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { self.measureHint(); self.draw(); });   // the hint's width settles with its font
       new IntersectionObserver(function (es) { self.visible = es[0].isIntersecting; if (self.visible) self.run(); }, { threshold: 0.2 }).observe(this);
 
       var last = null;
@@ -78,15 +79,28 @@
       }
       this.classList.remove('revealed');
       this.hintEl.classList.remove('gone');
+      this.hintGone = false; this.hintT = 0;
+      this.measureHint();
       this.draw();
       if (animate) this.run();
+    }
+
+    // where the hint's words sit on the card: the dashes behind them are left out, so they never cross the text
+    measureHint() {
+      this.gap = null;
+      var t = this.hintEl.firstChild;
+      if (!t || !this.W) return;
+      var range = document.createRange(); range.selectNodeContents(t);
+      var a = range.getBoundingClientRect(), b = this.getBoundingClientRect();
+      if (!a.width) return;
+      this.gap = { x0: a.left - b.left - 7, x1: a.right - b.left + 7, y0: a.top - b.top - 1, y1: a.bottom - b.top + 1 };
     }
 
     point(e) { var r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 
     // knock off the pieces along the finger's path
     scratch(a, b) {
-      if (!this.hintGone) { this.hintGone = true; this.hintEl.classList.add('gone'); }
+      if (!this.hintGone) { this.hintGone = true; this.hintT = performance.now(); this.hintEl.classList.add('gone'); }
       var dist = Math.hypot(b.x - a.x, b.y - a.y), steps = Math.max(1, Math.ceil(dist / 4));
       var dx = (b.x - a.x) / (dist || 1), dy = (b.y - a.y) / (dist || 1);
       for (var s = 0; s <= steps; s++) {
@@ -121,6 +135,7 @@
         if (calm.matches) { cell.on = false; return; }
         cell.go = now + (cell.c + cell.r * 0.5) * 7;   // the rest scatters in a wave
       });
+      if (!this.hintGone) { this.hintGone = true; this.hintT = performance.now(); }
       this.hintEl.classList.add('gone');
       setTimeout(function () { self.classList.add('revealed'); }, calm.matches ? 0 : 450);
       this.draw(); this.run();
@@ -141,6 +156,7 @@
           return p.life > 0 && p.y < self.H + 20;
         });
         if (self.flying.length) busy = true;
+        if (self.hintT && now < self.hintT + 400) busy = true;   // the dashes behind the hint are fading back in
         self.draw(now);
         self.raf = busy ? requestAnimationFrame(tick) : 0;
       };
@@ -152,6 +168,8 @@
       if (!W) return;
       now = now || performance.now();
       c.clearRect(0, 0, W, H);
+      // the dashes behind the hint stay out while it shows, and fade in as it fades out
+      var g = this.gap, gapA = !g ? 1 : this.hintGone ? Math.min(1, (now - this.hintT) / 400) : 0;
       for (var i = 0; i < this.cells.length; i++) {
         var cell = this.cells[i];
         if (!cell.on) continue;
@@ -165,7 +183,10 @@
         var x = cell.c * CELL, y = cell.r * CELL + drop;
         c.globalAlpha = a;
         c.fillStyle = col.cover; c.fillRect(x - .3, y - .3, CELL + .6, CELL + .6);
-        c.fillStyle = col.ink; c.globalAlpha = a * 0.55;
+        var da = a * 0.55;
+        if (gapA < 1) { var mx = x + CELL / 2, my = cell.r * CELL + CELL / 2; if (mx > g.x0 && mx < g.x1 && my > g.y0 && my < g.y1) da *= gapA; }
+        if (da <= 0) continue;
+        c.fillStyle = col.ink; c.globalAlpha = da;
         c.fillRect(x + CELL / 2 - 2, y + CELL / 2 - .5, 4, 1);     // a dash, drawn as a line so it is the same on every device
       }
       c.fillStyle = col.ink;

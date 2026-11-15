@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v59, 5 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v60, 15 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -96,9 +96,11 @@ the next run will overwrite hand edits.
 and the form, and for slow or vertical moves). A tab slides in from the side you travelled towards; on load it rises.
 
 **Menu** (`<wadi-horizon>`): order Work, Services, About, Contact (Work opens first, so it is also first). No container. Labels float over a faint line of dashes (a horizon) that lifts
-into a small hill under the active tab and travels on a switch. The page fades out behind the menu.
+into a small hill under the active tab and travels on a switch. The page fades out behind the menu: solid behind the
+labels, fading only in the space above them, so no text ever shows through the labels (v60).
 
-**Services → Interactive + games**: a scratch-to-reveal card (`<wadi-scratch>`) as a campaign demo.
+**Services → Interactive + games**: a scratch-to-reveal card (`<wadi-scratch>`) as a campaign demo. The dashes behind
+the "Scratch to reveal" hint are left out while it shows, so they never cross the words (v60).
 
 **Contact**: the plain list (Email, Book a call, Jeddah local time). "Book a call" opens an email titled "Book a call"
 until a booking link exists.
@@ -134,6 +136,11 @@ right). Project names are transliterated into Arabic script; the owner reviewed 
 - When deleting a block of CSS, check its neighbours (removing the rain demo once deleted the landscape's styles).
 - Check things visually, not just by values.
 - Hidden or zoomed canvases need care: draw at the zoom you show them, and size them once.
+- Anything that slides in sideways can push past the screen edge and make a phone shrink the whole page; the page
+  is clipped sideways in `style.css` (v60). When testing, check the page width stays the screen width during a tab switch.
+- Thin CSS dashes are drawn as a border, not a filled box: a border keeps one thickness wherever it lands, a box
+  can look bold on one line and thin on the next (v60).
+- The first item of a list has a larger scroll margin so its small label stays clear of the top bar (v60).
 
 ## What's next (summary; the doc has the full list)
 
