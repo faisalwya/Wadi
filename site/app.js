@@ -22,12 +22,13 @@
         v.hidden=false;
         v.style.setProperty('--dx',dir?(dir*(rtl?-1:1)*28)+'px':'0px');
         v.style.setProperty('--dy',dir?'0px':'10px');
-        v.querySelectorAll('.it,.group').forEach(function(it){it.style.animation='none';void it.offsetWidth;it.style.animation='';});
+        v.querySelectorAll('.it,.group,.pg,.stage,.names').forEach(function(it){it.style.animation='none';void it.offsetWidth;it.style.animation='';});
       } else v.hidden=true;
     });
     tabs.forEach(function(t){t.setAttribute('aria-pressed', t.dataset.tab===key?'true':'false');});
     ind.style.transform='translateX('+(keys.indexOf(key)*100*(rtl?-1:1))+'%)';
-    next.hidden=(key==='contact');
+    document.documentElement.dataset.tab=key;               // style.css fits Work to one screen
+    next.hidden=(key==='contact'||key==='work');            // Work carries its own closing line, after the names
     if(started) document.dispatchEvent(new CustomEvent('wadi:tab',{detail:key}));  // lets widgets react to tab changes
     started=true;
   }
@@ -36,6 +37,29 @@
     show(k); window.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});
   }
   tabs.forEach(function(t){t.addEventListener('click',function(){ go(t.dataset.tab); });});
+
+  // ---- Work: a stage. One project is always showing; the names under it pick which (a tap, or the arrow keys).
+  // Nothing opens or closes, so nothing on the page moves. A project's live preview loads the first time it shows,
+  // and a stand-in image's dash range rises again each time.
+  var pjs=[].slice.call(document.querySelectorAll('.stage .pj')), pns=[].slice.call(document.querySelectorAll('.names .pn'));
+  var fitted=window.matchMedia('(min-height:560px)');
+  function pick(i,focus){
+    if(i<0||i>=pjs.length) return;
+    pjs.forEach(function(p,j){ p.classList.toggle('on',j===i); if(j===i) p.removeAttribute('aria-hidden'); else p.setAttribute('aria-hidden','true'); });
+    pns.forEach(function(b,j){ b.classList.toggle('on',j===i); b.setAttribute('aria-selected',j===i?'true':'false'); b.tabIndex=j===i?0:-1; });
+    loadEmbed(pjs[i]);
+    var plate=pjs[i].querySelector('wadi-plate'); if(plate&&plate.rise&&!plate.raf&&!calm.matches) plate.rise();
+    if(focus) pns[i].focus({preventScroll:true});
+    if(fitted.matches) pns[i].scrollIntoView({block:'nearest',behavior:calm.matches?'auto':'smooth'});   // keep the picked name in view in its own list
+    else window.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});                                 // a short screen: the page scrolls, so return to the stage
+  }
+  pns.forEach(function(b,i){
+    b.addEventListener('click',function(){ pick(i); });
+    b.addEventListener('keydown',function(e){
+      var d=(e.key==='ArrowDown'||e.key===(rtl?'ArrowLeft':'ArrowRight'))?1:(e.key==='ArrowUp'||e.key===(rtl?'ArrowRight':'ArrowLeft'))?-1:0;
+      if(d){ e.preventDefault(); pick(i+d,true); }
+    });
+  });
 
   // swipe sideways on the page to move to the next or previous tab, as in an app. Ignored near the screen's
   // edges (the phone's own back gesture), on the scratch card, previews and the form, and for slow or
@@ -258,7 +282,7 @@
       // the content and the menu slide in under it (the content waits until the range, rising from the bottom of
       // the screen, has passed over its place)
       contentEls().forEach(function(el,i){
-        el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:520,delay:D*.66+i*30,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
+        el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:520,delay:D*.72+i*30,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
       });
       nav.animate([{transform:'translateY(120%)'},{transform:'none'}],{duration:560,delay:D*.5,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
       // hand over: the real name and landscape fade in as the travelling copies fade out (hides any sub-pixel difference)

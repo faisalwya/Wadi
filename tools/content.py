@@ -1,4 +1,6 @@
 # Builds the four tab sections of site/index.html and site/ar/index.html from one source, so both
+# (Work is a stage of project panels with a list of names; Services and Questions are lists that open in place;
+# About is a page; Contact starts with the brief, open.)
 # languages keep the same structure. Run: python3 tools/content.py  (rewrites the <section> blocks in place)
 import re, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'site')
@@ -18,12 +20,44 @@ def dashes(items): return '        <ul class="dash">' + ''.join(f'<li>{x}</li>' 
 def steps(items): return '        <ol class="steps">' + ''.join(f'<li><b>{a}</b><span>{b}</span></li>' for a, b in items) + '</ol>'
 def go(href, label): return f'        <a class="go" href="{href}" target="_blank" rel="noopener">{label} {ARROW}</a>'
 def group(t): return f'    <p class="group">{t}</p>'
+NEXT_ARROW = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>'
+
+# Work is a stage: every project is a whole panel (title, line, image, text, facts and link) and the panels share one
+# place on the page; the list of names under it picks which one shows (app.js). The parts are the same ones the
+# other tabs use, sorted into their places here.
+def project(i, title, sub, pieces):
+    vis = text = link = ''; facts = []
+    for p in pieces:
+        if isinstance(p, tuple):
+            if p[0] == 'meta': facts = [v for _, v in p[1]]
+        elif 'class="go"' in p: link = p.strip()
+        elif 'class="body"' in p: text = p.strip()
+        else: vis = p.strip()
+    on = i == 0
+    return (f'      <article class="pj{" on" if on else ""}" id="pj-{i}" role="tabpanel" aria-labelledby="pn-{i}"{"" if on else " aria-hidden=" + chr(34) + "true" + chr(34)}>\n'
+            f'        <h2 class="pj-t">{title}</h2><p class="sub">{sub}</p>\n'
+            f'        {vis}\n        {text}\n'
+            f'        <div class="pj-foot"><span class="facts">{" · ".join(facts)}</span>{link}</div>\n'
+            f'      </article>')
+
+def name(i, title):
+    on = i == 0
+    return (f'      <button class="pn{" on" if on else ""}" id="pn-{i}" type="button" role="tab" aria-selected="{"true" if on else "false"}" '
+            f'aria-controls="pj-{i}" tabindex="{0 if on else -1}">{title}</button>')
+
+# About is a page read from top to bottom: a small label, then the text, always open.
+def page(label, pieces, first):
+    inner = parts(pieces)
+    if first: inner = inner.replace('class="body"', 'class="lede"', 1)
+    return f'    <div class="pg"><h2 class="pg-l">{label}</h2>\n{inner.replace(chr(60) + "ul class=" + chr(34) + "dash" + chr(34), chr(60) + "ul class=" + chr(34) + "dash big" + chr(34))}\n    </div>'
+
 def plate(seed, tint): return f'        <wadi-plate class="vis" seed="{seed}" style="background:var({tint})"></wadi-plate>'
 
 L = {
 'en': dict(
   work_label='Selected work', services_label='What we do', about_label='About', contact_label='Get in touch',
   role='Role', year='Year', built='Built with', typical='Typical', includes='Includes',
+  cta_q='Have a project in mind?', cta_a='Get in touch',
   work=[
     ('The Little Theory', 'Online store · 2026',
      ['        <a class="vis" href="https://thelittletheory.com" target="_blank" rel="noopener" aria-label="Visit The Little Theory" style="background:var(--w5)"><img src="/img/little-theory.jpg" alt="" loading="lazy" decoding="async" width="1200" height="660"></a>',
@@ -108,6 +142,7 @@ L = {
 ),
 'ar': dict(
   work_label='أعمال مختارة', services_label='خدماتنا', about_label='من نحن', contact_label='تواصل معنا',
+  cta_q='لديك مشروع في بالك؟', cta_a='تواصل معنا',
   work=[
     ('ذا ليتل ثيوري', 'متجر إلكتروني · 2026',
      ['        <a class="vis" href="https://thelittletheory.com" target="_blank" rel="noopener" aria-label="زيارة متجر ذا ليتل ثيوري" style="background:var(--w5)"><img src="/img/little-theory.jpg" alt="" loading="lazy" decoding="async" width="1200" height="660"></a>',
@@ -207,10 +242,13 @@ def opts(name, labels, multi):
 
 def build(d, lang):
     ltr = ' dir="ltr"' if lang == 'ar' else ''
-    work = '\n'.join(item(t, s, parts(p)) for t, s, p in d['work'])
+    work = ('    <div class="stage">\n' + '\n'.join(project(i, t, s, p) for i, (t, s, p) in enumerate(d['work'])) + '\n    </div>\n'
+            f'    <div class="names" role="tablist" aria-label="{d["work_label"]}">\n' + '\n'.join(name(i, t) for i, (t, s, p) in enumerate(d['work'])) + '\n'
+            f'      <a class="next" href="#contact"><span class="q">{d["cta_q"]}</span><span class="a">{d["cta_a"]} {NEXT_ARROW}</span></a>\n'
+            '    </div>')
     services = '\n'.join(item(t, s, parts(p)) for t, s, p in d['services'])
     services += '\n' + group(d['questions_label']) + '\n' + '\n'.join(item(q, None, body(a), 'it qa') for q, s, a in d['questions'])
-    about = '\n'.join(item(t, s, parts(p)) for t, s, p in d['about'])
+    about = '\n'.join(page(t, p, i == 0) for i, (t, s, p) in enumerate(d['about']))
     b = d['brief']
     form = (f'        <form class="brief" novalidate>\n'
             f'          <p class="q">{b["need"]}</p>\n{opts("need", b["needs"], True)}\n'
@@ -220,7 +258,8 @@ def build(d, lang):
             f'          <button class="go send" type="submit">{b["send"]} <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>\n'
             f'          <p class="note">{b["note"]}</p>\n'
             f'        </form>')
-    contact = item(b['title'], b['sub'], form, 'it brief-it') + '\n'
+    # the brief is the first thing on Contact, already open
+    contact = f'    <div class="pg brief-pg"><h2 class="h">{b["title"]}</h2><p class="sub">{b["sub"]}</p>\n{form}\n    </div>\n'
     for href, nm, hd, icon in d['contact']:
         hd_attr = ltr if hd.startswith(('+', '@', 'hello')) else ''
         svg = MAIL if icon == 'mail' else ARROW16
