@@ -185,6 +185,16 @@ wadi-sky canvas{display:block}
 .cover-name{position:relative;margin:0;font-family:var(--display);font-weight:500;font-size:calc(clamp(34px,6vw,44px) * 1.6);
   line-height:1;letter-spacing:-.03em;text-align:center;transform-origin:0 0}
 [lang="ar"] .cover-name{letter-spacing:0}
+/* The name's entrance (app.js): it first appears drawn in dashes, like the range, then settles into solid type.
+   The dashes are drawn on a canvas (.nm-dash) behind a copy of the name (.nm-knock) that cuts them to the exact
+   letterforms: the copy is a page-coloured box whose letters let the canvas show through (blend mode), so the
+   dashes and the final letters can never be out of register. Both are removed once the name has settled. */
+.cover-name.live{isolation:isolate;color:transparent}
+.cover-name .nm-dash,.cover-name .nm-knock{position:absolute;top:-.4em;left:-.12em;width:calc(100% + .24em);height:calc(100% + .8em);box-sizing:border-box;
+  pointer-events:none;-webkit-user-select:none;user-select:none}
+.cover-name .nm-knock{padding:.4em .12em;white-space:nowrap;text-align:center;background:var(--bg);color:var(--fg);mix-blend-mode:lighten}   /* letters in the ink itself, so their edges match the final name exactly */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cover-name .nm-knock{mix-blend-mode:darken}}
+:root[data-theme="dark"] .cover-name .nm-knock{mix-blend-mode:darken}
 /* the cover's range: finer and much taller than the top bar's (60px before the zoom), resting above the pointer */
 wadi-pattern.cover-land{position:absolute;left:calc(50% - 110px);bottom:calc(168px + env(safe-area-inset-bottom, 0px));height:60px;margin:0;
   transform:scale(var(--zoom));transform-origin:50% 100%}

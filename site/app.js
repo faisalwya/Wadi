@@ -113,7 +113,8 @@
   // Tapping the name in the top bar plays the same move in reverse and returns to the cover.
   // Nothing here follows the scroll, so it plays the same on every phone. The cover is skipped on links that
   // open a specific tab and on return visits; with reduce motion there is no cover at all.
-  // ?cover=on|off in the URL forces it (ignoring the once-per-session rule) for testing.
+  // ?cover=on|off in the URL forces it (ignoring the once-per-session rule) for testing; ?name=off shows the name
+  // without its dash entrance.
   var cover=document.getElementById('cover'), root=document.documentElement;
   if(cover&&!calm.matches) setupCover(); else if(cover) cover.remove();
 
@@ -128,7 +129,7 @@
     function zoom(){ return parseFloat(getComputedStyle(root).getPropertyValue('--zoom'))||1; }
     function fitZoom(){ customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(zoom()); }); }
     fitZoom(); window.addEventListener('resize',fitZoom);
-    var q=new URLSearchParams(location.search).get('cover');
+    var q=new URLSearchParams(location.search).get('cover'), q2=new URLSearchParams(location.search).get('name');
     var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
 
     // the name in the top bar becomes a button back to the cover (inside the heading, so it stays a heading)
@@ -158,6 +159,59 @@
       showCover();
     }
 
+    // ---- The name's entrance: it first appears drawn in dashes, in the range's own language, and then settles into
+    // solid type. Columns of dashes grow up from below in a wave from where reading starts (as the mountains do,
+    // with a little spring); while it is in dashes a slow ripple runs through it and the dashes shimmer faintly;
+    // then the dashes join into lines and the lines thicken until they are the letters. The dashes are cut to the
+    // real letterforms by a copy of the name laid over the canvas (style.css), so nothing swaps or jumps at the end.
+    // It plays once, when the cover opens (not on returning to it); a tap, a resize or a late font ends it at once.
+    var nameRaf=0, nameSize=null;
+    function nameDone(){
+      if(nameSize) nameSize.disconnect(); nameSize=null;
+      cancelAnimationFrame(nameRaf); nameRaf=0;
+      cName.classList.remove('live');
+      cName.querySelectorAll('.nm-dash,.nm-knock').forEach(function(el){ el.remove(); });
+    }
+    function dashName(){
+      if(q2==='off'||!window.CSS||!CSS.supports('mix-blend-mode','lighten')||!CSS.supports('isolation','isolate')) return 0;
+      var CELL=4.6, ROW=3, DW=3, DH=1.1;                    // the grid's pitch and the dash's size (px)
+      var RISE=1000, HOLD=400, SETTLE=850, START=100;       // ms
+      var cs=getComputedStyle(root), FG=cs.getPropertyValue('--fg').trim(), BG=cs.getPropertyValue('--bg').trim();
+      var cv=document.createElement('canvas'); cv.className='nm-dash';
+      var kn=document.createElement('span'); kn.className='nm-knock'; kn.textContent=cName.textContent;
+      cName.classList.add('live'); cName.append(cv,kn);
+      var W=cv.offsetWidth, H=cv.offsetHeight, dpr=Math.min(window.devicePixelRatio||1,3), g=cv.getContext('2d');
+      if(!W||!H||!g){ nameDone(); return 0; }
+      cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); g.setTransform(dpr,0,0,dpr,0,0);
+      var cols=Math.ceil(W/CELL), rows=Math.ceil(H/ROW), w0=cName.offsetWidth, h0=cName.offsetHeight;
+      var sm=function(x){ x=Math.max(0,Math.min(1,x)); return x*x*(3-2*x); };
+      var spring=function(x){ x=Math.max(0,Math.min(1,x)); return 1+2.2*Math.pow(x-1,3)+1.2*Math.pow(x-1,2); };   // rises a touch past, then settles back
+      if(window.ResizeObserver){                             // the layout changed under it (a late font, a rotation): show the plain name
+        nameSize=new ResizeObserver(function(){ if(cName.offsetWidth!==w0||cName.offsetHeight!==h0) nameDone(); });
+        nameSize.observe(cName);
+      }
+      var t0=performance.now()+START;
+      nameRaf=requestAnimationFrame(function tick(now){
+        var t=now-t0, ts=now/1000, b=(t-RISE-HOLD)/SETTLE;
+        var s=sm(b), s1=sm(s/.6), s2=sm((s-.3)/.7);          // settling: the dashes join into lines, then the lines thicken
+        var live=(1-s)*sm(t/500);                            // the ripple and shimmer, gone by the time it is solid
+        var w=DW+(CELL+.6-DW)*s1, h=DH+(ROW+.6-DH)*s2;
+        g.globalAlpha=1; g.fillStyle=BG; g.fillRect(0,0,W,H); g.fillStyle=FG;
+        for(var c=0;c<cols;c++){
+          var u=(c+.5)/cols; if(rtl) u=1-u;                  // 0 where reading starts
+          var top=spring((t-u*RISE*.6)/(RISE*.4))*rows;      // how far this column has risen
+          var dy=live*1.3*Math.sin(ts*2.4-u*9)*(1-s2), x=c*CELL+(CELL-w)/2;
+          for(var r=0;r<rows;r++){
+            var on=Math.max(0,Math.min(1,top-r)); if(on<=.01) break;
+            g.globalAlpha=on*(1-live*.22*(.5+.5*Math.sin(ts*3.1+u*40+r*1.7)));
+            g.fillRect(x, H-(r+.5)*ROW-h/2+dy, w, h);
+          }
+        }
+        if(b<1) nameRaf=requestAnimationFrame(tick); else nameDone();
+      });
+      return START+RISE+HOLD+SETTLE;
+    }
+
     function clear(els){ els.forEach(function(el){ el.getAnimations().forEach(function(an){ an.cancel(); }); }); }
     function contentEls(){ return [].slice.call(wrap.children).filter(function(el){ return !el.classList.contains('top'); }); }
 
@@ -170,8 +224,9 @@
       cName.style.opacity='0'; line.style.opacity='0';
       var shown=false, reveal=function(){
         if(shown) return; shown=true; cName.style.opacity=''; line.style.opacity='';
-        cName.animate([{opacity:0,translate:'0 6px'},{opacity:1,translate:'0 0'}],{duration:900,delay:100,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
-        line.animate([{opacity:0},{opacity:1}],{duration:900,delay:700,easing:'ease',fill:'backwards'});
+        var took=dashName();                                 // the name rises in dashes, then settles (or simply fades up where that is not possible)
+        if(!took) cName.animate([{opacity:0,translate:'0 6px'},{opacity:1,translate:'0 0'}],{duration:900,delay:100,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
+        line.animate([{opacity:0},{opacity:1}],{duration:900,delay:took?took*.8:700,easing:'ease',fill:'backwards'});
       };
       if(document.fonts&&document.fonts.ready) document.fonts.ready.then(reveal);
       setTimeout(reveal,900);
@@ -189,6 +244,7 @@
 
     function enter(){
       if(state!=='cover') return; state='moving';
+      nameDone();                                            // if the name is still settling, it becomes solid at once
       clear([cName,cLand,bg,sky,line,enterBtn].concat(contentEls(),[nav]));
       var o=offsets(), t0=performance.now();
       // the birds and the swell settle as the move begins

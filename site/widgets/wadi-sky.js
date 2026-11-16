@@ -56,7 +56,7 @@
       var textBottom = line ? line.offsetTop + line.offsetHeight : name ? name.offsetTop + name.offsetHeight : this.H * .3;
       this.skyBottom = landTop - 6;                                // just above the peaks
       this.skyTop = Math.max(textBottom + 14, landTop - 96);       // and clear of the name and its line
-      this.text = name ? { top: name.offsetTop - 12, bottom: textBottom + 12, half: Math.max(name.offsetWidth, line ? line.offsetWidth : 0) / 2 + 16 } : null;
+      this.text = name ? { top: name.offsetTop - 30, bottom: textBottom + 12, half: Math.max(name.offsetWidth, line ? line.offsetWidth : 0) / 2 + 16 } : null;
       if (oldTop !== this.skyTop || oldBottom !== this.skyBottom) this.stars = null;   // stars are placed again only if the sky changed
       if (!this.birds) this.setup();
       else if (oldBottom !== undefined && (oldTop !== this.skyTop || oldBottom !== this.skyBottom)) {

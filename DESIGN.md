@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v67, 16 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v68, 16 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -32,7 +32,8 @@ These came from many rounds of feedback. Treat them as rules.
   the studio does, because a first-time client needs that answer on the first screen.
 - Text characters used as visuals that look like symbols rather than an image (early ribbon versions).
 - Big decorative extras: the sun as a thin dashed ring, wind lines, a trickle of falling dashes as a scroll
-  cue, rain, a "light path" reflection on the water, a name that builds itself from flying dashes.
+  cue, rain, a "light path" reflection on the water, a name that builds itself from flying dashes (revisited in v68: the
+  name now rises in dashes *in place* and settles; nothing flies, the letters never move).
 - An outlined "Enter" pill; buttons that look like buttons where a quiet symbol would do.
 - A copy button and card on the email; extra sections on Contact (it was reverted to the plain list).
 - Scroll-linked resizing (felt choppy on iPhone; replaced by the cover).
@@ -77,6 +78,15 @@ These came from many rounds of feedback. Treat them as rules.
 - The language switch is on the cover too (v62), in exactly the spot the top bar's occupies, so it does not move on
   entering. Switching language from the cover opens the other language's cover. A tap on it does not enter the site.
 - The name waits briefly for its font, so it never swaps typeface on screen.
+- **The name's entrance (v68)**: when the cover opens, the name first appears drawn in dashes, in the range's own language.
+  Columns of dashes grow up from below in a wave from where reading starts, as the mountains do; while it is in dashes a
+  slow ripple runs through it and the dashes shimmer faintly; then the dashes join into lines and the lines thicken until
+  they are the letters (about 2.3 s in all; the line under the name fades in as it settles). The dashes are drawn on a
+  canvas and cut to the real letterforms by a copy of the name laid over it (a blend mode, see `style.css`), so the last
+  dashed frame and the plain name are pixel-identical and nothing swaps or jumps. It plays once, on opening, not on
+  returning to the cover; a tap, a rotation or a late font ends it at once; where the browser cannot do it the name simply
+  fades up. `?name=off` shows the cover without it. Two other entrances were tried and set aside: the name going solid
+  behind a passing band of light (read as a progress bar) and dashes appearing in random order (too busy).
 - Entering (a tap anywhere, the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
   landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end (the range rises
   from the bottom of the screen, shrinking and settling to the top bar's height as it arrives; the content waits until it
