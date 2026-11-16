@@ -106,7 +106,8 @@
     v.appendChild(f);
   }
 
-  // ---- Cover: a full screen with the big name, the living landscape and the birds. It opens on the first
+  // ---- Cover: a full screen composed as one scene (the name above, the range large near the bottom, the sun and
+  // birds in the sky between). It opens on the first
   // visit of a session; entering (the pointer, a swipe up, a scroll or a key) carries the name and landscape
   // up into the top bar in one pre-built move while the cover fades and the content and menu slide in.
   // Tapping the name in the top bar plays the same move in reverse and returns to the cover.
@@ -121,11 +122,14 @@
     var cName=cover.querySelector('.cover-name'), cLand=cover.querySelector('.cover-land'), enterBtn=cover.querySelector('.enter');
     var bg=cover.querySelector('.cover-bg'), sky=cover.querySelector('wadi-sky'), line=cover.querySelector('.cover-line');
     var hName=document.querySelector('.top h1'), hLand=document.querySelector('.top wadi-pattern');
-    var ZOOM=1.6, D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
+    var D=640, EASE='cubic-bezier(.65,0,.3,1)', state='site';
     var SQUASH=24/(parseInt(cLand.getAttribute('h'),10)||24);   // the cover's range is taller than the top bar's: it settles to the same height as it arrives
+    // how much the cover's range is enlarged (style.css sets --zoom; shorter screens use less); it is drawn sharp at that size
+    function zoom(){ return parseFloat(getComputedStyle(root).getPropertyValue('--zoom'))||1; }
+    function fitZoom(){ customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(zoom()); }); }
+    fitZoom(); window.addEventListener('resize',fitZoom);
     var q=new URLSearchParams(location.search).get('cover');
     var seen=false; try{seen=sessionStorage.getItem('wadi-cover')==='1';}catch(e){}
-    customElements.whenDefined('wadi-pattern').then(function(){ cLand.setZoom(ZOOM); });
 
     // the name in the top bar becomes a button back to the cover (inside the heading, so it stays a heading)
     var home=document.createElement('button');
@@ -180,7 +184,7 @@
       var s=b.width/a.width;
       return { s:s,
         name:'translate('+((b.left+b.width/2)-(a.left+a.width*s/2))+'px,'+((b.top+b.height/2)-(a.top+a.height*s/2))+'px) scale('+s+')',   // centre onto centre
-        land:'translate('+((lb.left+lb.width/2)-(la.left+la.width/2))+'px,'+(lb.bottom-la.bottom)+'px) scale(1,'+SQUASH+')' };                     // bottom centre onto bottom centre
+        land:'translate('+((lb.left+lb.width/2)-(la.left+la.width/2))+'px,'+(lb.bottom-la.bottom-2*(1-SQUASH))+'px) scale(1,'+SQUASH+')' };          // ground line onto ground line, centred
     }
 
     function enter(){
@@ -193,11 +197,12 @@
       sky.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'});
       line.animate([{opacity:1},{opacity:0}],{duration:200,easing:'ease',fill:'forwards'});
       cName.animate([{transform:'none'},{transform:o.name}],{duration:D,easing:EASE,fill:'forwards'});
-      cLand.animate([{transform:'scale('+ZOOM+')'},{transform:o.land}],{duration:D,easing:EASE,fill:'forwards'});
+      cLand.animate([{transform:'scale('+zoom()+')'},{transform:o.land}],{duration:D,easing:EASE,fill:'forwards'});
       bg.animate([{opacity:1},{opacity:0}],{duration:D*.7,delay:D*.3,easing:'ease',fill:'forwards'});
-      // the content and the menu slide in under it
+      // the content and the menu slide in under it (the content waits until the range, rising from the bottom of
+      // the screen, has passed over its place)
       contentEls().forEach(function(el,i){
-        el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:520,delay:D*.45+i*30,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
+        el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:520,delay:D*.66+i*30,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
       });
       nav.animate([{transform:'translateY(120%)'},{transform:'none'}],{duration:560,delay:D*.5,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});
       // hand over: the real name and landscape fade in as the travelling copies fade out (hides any sub-pixel difference)
@@ -223,7 +228,7 @@
       nav.animate([{transform:'none'},{transform:'translateY(120%)'}],{duration:320,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'});
       bg.animate([{opacity:0},{opacity:1}],{duration:D*.6,easing:'ease',fill:'backwards'});
       cName.animate([{transform:o.name},{transform:'none'}],{duration:D,easing:EASE,fill:'backwards'});
-      cLand.animate([{transform:o.land},{transform:'scale('+ZOOM+')'}],{duration:D,easing:EASE,fill:'backwards'});
+      cLand.animate([{transform:o.land},{transform:'scale('+zoom()+')'}],{duration:D,easing:EASE,fill:'backwards'});
       sky.animate([{opacity:0},{opacity:1}],{duration:420,delay:D*.7,easing:'ease',fill:'backwards'});
       line.animate([{opacity:0},{opacity:1}],{duration:420,delay:D*.8,easing:'ease',fill:'backwards'});
       enterBtn.animate([{opacity:0},{opacity:1}],{duration:320,delay:D*.8,easing:'ease',fill:'backwards'});

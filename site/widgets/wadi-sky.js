@@ -5,9 +5,9 @@
    crescent moon, both drawn as a fine grid of small dashes (like the mountains, a little finer so the disc reads
    round), to one side of the sky, with a glow of faint dashes around it; at night a dozen faint dash stars
    twinkle, each at its own pace.
-   It fills its parent (the cover) and keeps the birds in a band just above the cover's name (.cover-name),
-   close to the scene without crowding it. The band is re-measured whenever the layout changes (fonts
-   arriving, phone toolbars moving); birds already flying glide into the new band.
+   It fills its parent (the cover) and keeps the sun and the birds in a band of sky just above the range
+   (.cover-land), below the name and its line. The band is re-measured whenever the layout changes (fonts
+   arriving, phone toolbars moving); birds already flying glide into the new band. Stars keep clear of the text.
    The loop runs only while it is visible; colours follow light/dark. */
 (function () {
   if (customElements.get('wadi-sky')) return;
@@ -46,13 +46,17 @@
       this.canvas.style.width = this.W + 'px'; this.canvas.style.height = this.H + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       var land = this.parentNode && this.parentNode.querySelector('.cover-land'), name = this.parentNode && this.parentNode.querySelector('.cover-name');
+      var line = this.parentNode && this.parentNode.querySelector('.cover-line');
       // measure where the name and landscape rest in the layout (offsets ignore any move in progress, such as
       // the name gliding back down from the top bar when returning to the cover)
       this.cx = land ? land.offsetLeft + land.offsetWidth / 2 - this.offsetLeft : this.W / 2;   // in the sky's own coordinates (it may be narrower than the cover)
       var oldTop = this.skyTop, oldBottom = this.skyBottom;
-      var nameTop = name ? name.offsetTop : this.H * .4;
-      this.skyBottom = nameTop - 20;                               // just above the name
-      this.skyTop = Math.max(24, nameTop - 120);
+      var z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1;   // the range is shown enlarged about its bottom edge
+      var landTop = land ? land.offsetTop + land.offsetHeight * (1 - z) : this.H * .65;                 // where its highest peak reaches
+      var textBottom = line ? line.offsetTop + line.offsetHeight : name ? name.offsetTop + name.offsetHeight : this.H * .3;
+      this.skyBottom = landTop - 6;                                // just above the peaks
+      this.skyTop = Math.max(textBottom + 14, landTop - 96);       // and clear of the name and its line
+      this.text = name ? { top: name.offsetTop - 12, bottom: textBottom + 12, half: Math.max(name.offsetWidth, line ? line.offsetWidth : 0) / 2 + 16 } : null;
       if (oldTop !== this.skyTop || oldBottom !== this.skyBottom) this.stars = null;   // stars are placed again only if the sky changed
       if (!this.birds) this.setup();
       else if (oldBottom !== undefined && (oldTop !== this.skyTop || oldBottom !== this.skyBottom)) {
@@ -89,7 +93,7 @@
       // a fine, centred grid of small dashes (rows offset by half a cell so the disc reads round); the brightest
       // dashes use the strongest ink, as the light does on the hills, and a halo of faint dashes makes the glow
       var CW = 2.7, RH = 2.2, DW = 1.9, DH = .9, HALO = 11;
-      var R = 15, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .38;
+      var R = 15, x0 = this.cx + Math.min(118, this.W * .3), y0 = this.skyTop + (this.skyBottom - this.skyTop) * .3;
       var mx = x0 + R * .5, my = y0 - R * .2, mR = R * .9;          // the shadow that carves the crescent
       var night = this.night;
       if (night) this.drawStars(c, t, x0, y0, R + HALO);
@@ -133,12 +137,13 @@
     // night: tiny dash glimmers scattered across the sky, each twinkling at its own pace, now and then a brief glint
     drawStars(c, t, mx, my, mr) {
       if (!this.stars) {
-        var self = this, top = 18, bottom = this.skyBottom + 6, tries = 0;
+        var self = this, top = 56, bottom = this.skyBottom + 6, tries = 0, tx = this.text;   // below the language switch's corner
         this.stars = [];
-        while (this.stars.length < 13 && tries++ < 400) {
+        while (this.stars.length < 16 && tries++ < 600) {
           var x = Math.random() * this.W, y = top + Math.random() * (bottom - top);
           if (Math.hypot(x - mx, y - my) < mr + 18) continue;                   // not on the moon
-          if (this.stars.some(function (s) { return Math.hypot(s.x - x, s.y - y) < 34; })) continue;   // spread out
+          if (tx && y > tx.top && y < tx.bottom && Math.abs(x - this.W / 2) < tx.half) continue;   // not on the name or its line
+          if (this.stars.some(function (s) { return Math.hypot(s.x - x, s.y - y) < 44; })) continue;   // spread out
           this.stars.push({ x: x, y: y, speed: .5 + Math.random() * .9, seed: Math.random() * 10, size: Math.random() < .3 ? 2.6 : 1.8 });
         }
       }

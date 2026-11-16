@@ -20,7 +20,7 @@
      direction, ~3.5 s), catching the ridgelines most, the slopes a little and the valley floors barely,
      and showing faintly in the reflection.
    - reflect (attribute, the cover): while alive, a faint mirrored copy of the mountains lies just below the
-     ground line, flattened like a reflection on water, fading with depth, with a slow ripple running through
+     ground line, flattened like a reflection on water (to a little over half the range's height), fading with depth, with a slow ripple running through
      it. It fades out with the calm, so it never travels into the top bar.
    Drawn on a canvas as tiny lines (not text), so it looks the same on every device and font. It only
    animates while something is moving; with "reduce motion" it changes shape instantly. */
@@ -29,7 +29,7 @@
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   var WIDTH = 220, HEIGHT = 24;                  // its width, and its height unless the h attribute says otherwise (px)
-  var REFL = 14, SQUASH = .55;                   // the reflection's depth below the ground line (px) and flattening
+  var SQUASH = .55;                              // how much the reflection is flattened; its depth below the ground line follows the range's height
   var K = 150, C = 15, LINK = 110;               // spring stiffness, damping, link to neighbours
 
   var LANDS = {
@@ -67,13 +67,14 @@
       this.small = this.rows <= 6;                 // the top bar's: bolder dashes, one even ink, whole dashes at rest
       this.cellW = WIDTH / this.cols; this.rowH = this.H / this.rows;
       this.reflect = this.hasAttribute('reflect');
+      this.refl = this.reflect ? Math.round(this.H * SQUASH) + 1 : 0;   // room below the ground line for the reflection (px)
       this.box = document.createElement('canvas'); this.box.className = 'grid';
-      if (this.reflect) this.box.style.bottom = (2 - REFL) + 'px';   // the landscape stays put; the water hangs below
+      if (this.reflect) this.box.style.bottom = (2 - this.refl) + 'px';   // the landscape stays put; the water hangs below
       this.rtl = rtl;
       this.ctx = this.box.getContext('2d');
       this.view = { mode: null, p: 1 };
       this.append(this.box);
-      this.size(WIDTH, this.H + (this.reflect ? REFL : 0));
+      this.size(WIDTH, this.H + this.refl);
       this.readInk();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { self.readInk(); self.draw(); });
 
@@ -162,7 +163,7 @@
       var alive = this.aliveness(), t = this.aliveT || 0, bar = this.glyph === '|';
       var w = bar ? Math.max(.8, cellW * .2) : cellW * .65, hgt = bar ? rowH * .75 : (small ? 1.3 : Math.max(.7, Math.min(1, rowH * .3)));   // the small landscape gets slightly bolder dashes
       var fade = cols * .14;
-      this.size(WIDTH, this.H + (this.reflect ? REFL : 0));
+      this.size(WIDTH, this.H + this.refl);
       // the passing light: a band that sweeps across in the first 3.6 s of every 9 s
       var sweep = alive ? (t % 9) / 3.6 : 2, lightX = -.15 + sweep * 1.3;
       c2.clearRect(0, 0, this.cw, this.ch); c2.fillStyle = this.ink;

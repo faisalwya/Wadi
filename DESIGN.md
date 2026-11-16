@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v65, 15 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v66, 16 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -61,22 +61,26 @@ These came from many rounds of feedback. Treat them as rules.
 **Cover** (`#cover` in both pages; controller in `site/app.js`)
 - Shows once per browser session; skipped on links to a specific tab (`#contact`) and with reduce motion.
   `?cover=on` / `?cover=off` force it for testing.
-- Big name; a fine dash landscape (`<wadi-pattern class="cover-land" cols="72" rows="16" h="36" reflect>`) zoomed
-  1.6x and drawn sharp at that zoom. Since v65 it is half as tall again as the top bar's (36px before the zoom) and the
-  Work shape has a flat-floored valley, so it reads as two mountains with a valley between them (the wadi) rather than a
-  low strip. It keeps its soft fade down each column, which gives the mountains depth at this size; a rippling reflection below; a slow swell and ridge shimmer; a soft
-  band of **light passing** over the peaks every ~9 s (kept faint on purpose).
-- Sky (`<wadi-sky>`): three birds at different depths (five felt busy, v65), in a band just above the name, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
-  night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night.
-- Under the scene, one quiet line: "Websites, tools + interactive work · Jeddah". It fades in after the name.
+- **Composed as one scene (v66)**, using the whole screen: the name and its line in the upper third; the range large
+  near the bottom, running off both edges of a phone, with its reflection below; the sun and birds in the sky between.
+  Before v66 the name, range and line sat as one small cluster in the middle with the lower 40% of the screen empty.
+- The range is a fine dash landscape (`<wadi-pattern class="cover-land" cols="96" rows="26" h="60" reflect>`), enlarged
+  by `--zoom` (set in `style.css`: 2 on a phone, less on short screens, 3 on tablets and laptops) and drawn sharp at that
+  size. The Work shape has a flat-floored valley, so it reads as two mountains with a valley between them (the wadi).
+  It keeps a soft fade down each column, which gives the mountains depth at this size; the reflection mirrors the whole
+  range, flattened and fading with depth; a slow swell and ridge shimmer; a soft band of **light passing** over the peaks
+  every ~9 s (kept faint on purpose). It follows the current tab's shape.
+- Sky (`<wadi-sky>`): three birds at different depths (five felt busy, v65), in a band of sky just above the peaks, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
+  night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night, kept clear of the name and its line.
+- Under the name, one quiet line: "Websites, tools + interactive work · Jeddah". It fades in after the name.
 - The language switch is on the cover too (v62), in exactly the spot the top bar's occupies, so it does not move on
   entering. Switching language from the cover opens the other language's cover. A tap on it does not enter the site.
 - The name waits briefly for its font, so it never swaps typeface on screen.
 - Entering (a tap anywhere, the dash-chevron pointer, swipe up, scroll, or a key) plays one pre-built move: the name and
-  landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end (the cover's
-  taller range settles to the top bar's height as it arrives).
+  landscape glide into the top bar while the content and menu slide in, with a short crossfade at the end (the range rises
+  from the bottom of the screen, shrinking and settling to the top bar's height as it arrives; the content waits until it
+  has passed over).
   Tapping the name in the top bar plays it in reverse. Nothing is tied to scroll position.
-- The scene sits at the visual centre (~51% of the screen height).
 
 **Top bar** (`.top`): fixed, holds the name (a button back to the cover, inside the `h1`) and the small
 landscape (`<wadi-pattern>`, 40 x 6, drawn in full ink with slightly bolder dashes so its shape reads). Since v65 every
@@ -125,7 +129,7 @@ the "Scratch to reveal" hint are left out while it shows, so they never cross th
 until a booking link exists.
 
 **Sharing**: favicon and home-screen icon (a valley between two peaks, in dashes), a link-preview image (`og.png`,
-the cover itself) with title and description for WhatsApp and social links, and a quiet 404 page.
+the cover itself, re-made in v66) with title and description for WhatsApp and social links, and a quiet 404 page.
 
 **Arabic** (`site/ar/`): same structure, right-to-left, everything mirrored (waves and birds move from the
 right). Project names are transliterated into Arabic script; the owner reviewed the Arabic copy.
