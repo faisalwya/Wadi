@@ -1,7 +1,7 @@
 # Wadi Studio: design brief
 
 How the site looks, why it looks that way, and how to keep working on it without drifting. Read this
-before changing anything. It is the memory of the decisions made so far (as of v66, 16 Nov 2026).
+before changing anything. It is the memory of the decisions made so far (as of v67, 16 Nov 2026).
 The running list of open and parked items lives in the owner's "Wadi Studio: open and parked items" doc;
 the README explains how the files are organised.
 
@@ -72,7 +72,8 @@ These came from many rounds of feedback. Treat them as rules.
   every ~9 s (kept faint on purpose). It follows the current tab's shape.
 - Sky (`<wadi-sky>`): three birds at different depths (five felt busy, v65), in a band of sky just above the peaks, each wing two dashes, flapping in short bursts (quick downstroke, slower upstroke) and gliding in between; a **sun by day / moon by
   night** (follows light/dark) drawn as a fine round grid of dashes with a dash glow; faint twinkling stars at night, kept clear of the name and its line.
-- Under the name, one quiet line: "Websites, tools + interactive work · Jeddah". It fades in after the name.
+- Under the name, one quiet line: "Websites, tools + interactive work" (the city was dropped in v67; it stays on
+  Contact). It fades in after the name.
 - The language switch is on the cover too (v62), in exactly the spot the top bar's occupies, so it does not move on
   entering. Switching language from the cover opens the other language's cover. A tap on it does not enter the site.
 - The name waits briefly for its font, so it never swaps typeface on screen.
